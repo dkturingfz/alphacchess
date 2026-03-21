@@ -10,9 +10,10 @@
 - **Phase 0**：规则核心、编码契约、规范化与冒烟入口
 - **Phase 1**：最小 AlphaZero-like 自对弈/训练/随机基线评测闭环
 - **Phase 1.1**：回放与 value 监督质量加固
-- **Phase 1b（本次新增）**：风格参考模型训练、风格评测、灰区恢复流程与冻结 checkpoint 输出
+- **Phase 2（当前主线）**：纯 RL 放大与稳定化（大规模 self-play/train、回放质量监控、checkpoint 对比评测）
+- **Phase 1b（已实现，当前延后）**：风格参考模型训练、风格评测、灰区恢复流程与冻结 checkpoint 输出
 
-如需快速上手 Phase 1b，请先阅读：`docs/phase1b_file_guide.md`。
+如需快速上手纯 RL 主线，请先阅读：`docs/phase2_file_guide.md`。
 
 ---
 
@@ -700,6 +701,10 @@ Phase 0 产出的数据源调研文档。
 
 导出 replay 数据统计。
 
+## `scripts/evaluate_checkpoints.py`
+
+checkpoint-vs-checkpoint 内部对比评测入口（Phase 2 进度跟踪）。
+
 ## `scripts/generate_pikafish_data.py`
 
 可选，用 Pikafish 生成热启动数据。
@@ -917,7 +922,7 @@ python scripts/smoke_alphazero_entry.py
 
 ---
 
-## Phase Status Update (Phase 0 + Phase 1)
+## Phase Status Update (Phase 0 + Phase 1 + Phase 2)
 
 - **Phase 0** foundation is in place (Python Xiangqi rules core, OpenSpiel-compatible Game/State contract, validation/smoke path).
 - **Phase 1** minimal AlphaZero-like loop is now in place:
@@ -925,11 +930,17 @@ python scripts/smoke_alphazero_entry.py
   - replay export/load with version validation
   - training + checkpointing
   - reload + evaluation vs random baseline
+- **Phase 2** pure-RL scale-up path is now in place:
+  - multi-iteration larger-scale self-play/training defaults
+  - explicit replay-quality indicators (`num_games`, `natural_terminations`, `step_cap_truncations`, `result_counts`, `value_non_zero_fraction`)
+  - reproducible checkpoint-vs-checkpoint internal evaluation (`scripts/evaluate_checkpoints.py`)
+  - iteration/evaluation artifact summaries under the training output directory
 
-### Phase 1 scripts
+### Pure RL scripts (Phase 1/2)
 
 - `scripts/train_selfplay.py`
 - `scripts/evaluate_vs_random.py`
 - `scripts/export_replay_stats.py`
+- `scripts/evaluate_checkpoints.py`
 
-See `docs/phase1_file_guide.md` for usage and passing criteria.
+See `docs/phase2_file_guide.md` for current pure-RL usage and validation flow.

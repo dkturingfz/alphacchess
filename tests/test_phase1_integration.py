@@ -1,6 +1,6 @@
 from alphacchess.phase1_eval import EvalConfig, evaluate_vs_random
 from alphacchess.phase1_model import PolicyValueNet
-from alphacchess.phase1_replay import ReplayDataset
+from alphacchess.phase1_replay import ReplayDataset, summarize_replay
 from alphacchess.phase1_selfplay import SelfPlayConfig, run_selfplay
 from alphacchess.phase1_train import TrainConfig, train_on_replay
 
@@ -42,3 +42,37 @@ def test_one_iteration_selfplay_train_reload_evaluate(tmp_path):
 
     ev = evaluate_vs_random(reloaded, EvalConfig(games=6, max_moves=80, seed=3))
     assert ev.games == 6
+
+
+def test_multi_iteration_selfplay_train_reload_has_non_zero_value_targets(tmp_path):
+    model = PolicyValueNet.for_xiangqi_v1(seed=21)
+    checkpoints = []
+    for it in range(2):
+        replay, summary = run_selfplay(
+            model,
+            SelfPlayConfig(games=6, max_moves=80, terminal_enrichment_games=2, terminal_enrichment_max_moves=4),
+            seed=21 + it,
+        )
+        assert summary.games == 8
+        stats = summarize_replay(replay)
+        assert stats["num_games"] == 8
+        assert stats["natural_terminations"] + stats["step_cap_truncations"] == 8
+        assert stats["value_non_zero_fraction"] > 0.0
+
+        replay_path = tmp_path / f"replay_{it}.json"
+        replay.save(replay_path)
+        loaded = ReplayDataset.load(replay_path)
+        obs, pol, val = loaded.as_arrays()
+        train_on_replay(model, obs, pol, val, TrainConfig(epochs=1, batch_size=32, lr=1e-3, seed=21 + it))
+
+        ckpt = tmp_path / f"model_{it}.json"
+        metadata = dict(loaded.metadata)
+        metadata["checkpoint_schema_version"] = "phase1_checkpoint_v1"
+        metadata["iteration"] = str(it)
+        model.save_checkpoint(ckpt, metadata)
+        checkpoints.append(ckpt)
+
+        model, ckpt_meta = PolicyValueNet.load_checkpoint(ckpt)
+        assert ckpt_meta["iteration"] == str(it)
+
+    assert len(checkpoints) == 2

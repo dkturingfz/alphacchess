@@ -30,6 +30,19 @@ class EvalResult:
         return self.wins / self.games if self.games else 0.0
 
 
+@dataclass
+class CheckpointMatchResult:
+    games: int
+    candidate_wins: int
+    baseline_wins: int
+    draws: int
+
+    @property
+    def candidate_score(self) -> float:
+        # 1 point for win, 0.5 for draw.
+        return (self.candidate_wins + 0.5 * self.draws) / self.games if self.games else 0.0
+
+
 def _model_action(model: PolicyValueNet, state, rng: random.Random) -> int:
     legal = state.legal_actions()
     logits, _ = model.forward([state.observation_tensor()])
@@ -95,6 +108,47 @@ def evaluate_vs_random(model: PolicyValueNet, cfg: EvalConfig) -> EvalResult:
             draws += 1
 
     return EvalResult(games=cfg.games, wins=wins, losses=losses, draws=draws)
+
+
+def evaluate_model_vs_model(
+    candidate_model: PolicyValueNet,
+    baseline_model: PolicyValueNet,
+    cfg: EvalConfig,
+) -> CheckpointMatchResult:
+    from .xiangqi_game import XiangqiGame
+
+    rng = random.Random(cfg.seed)
+    game = XiangqiGame()
+    candidate_wins = baseline_wins = draws = 0
+
+    for gi in range(cfg.games):
+        state = game.new_initial_state()
+        candidate_color = RED if gi % 2 == 0 else -RED
+        steps = 0
+        while not state.is_terminal() and steps < cfg.max_moves:
+            legal = state.legal_actions()
+            if not legal:
+                break
+            model = candidate_model if state.current_player() == candidate_color else baseline_model
+            action = _model_action(model, state, rng)
+            state.apply_action(action)
+            steps += 1
+
+        returns = state.returns() if state.is_terminal() else _material_returns(state)
+        candidate_ret = returns[0] if candidate_color == RED else returns[1]
+        if candidate_ret > 0:
+            candidate_wins += 1
+        elif candidate_ret < 0:
+            baseline_wins += 1
+        else:
+            draws += 1
+
+    return CheckpointMatchResult(
+        games=cfg.games,
+        candidate_wins=candidate_wins,
+        baseline_wins=baseline_wins,
+        draws=draws,
+    )
 
 
 def eval_metadata() -> Dict[str, str]:
