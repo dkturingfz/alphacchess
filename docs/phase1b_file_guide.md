@@ -6,6 +6,12 @@ Phase 1b 的目标是训练并冻结风格参考策略 `pi_style`，用于后续
 
 > 注意：Phase 1b 只做风格参考模型，不做 KL 约束强化学习本体。
 
+## 当前状态说明（2026-03-21）
+
+- 风格流水线（训练/评测/恢复）已在仓库中实现。
+- 当前 demo 规模 style checkpoint 质量不足，按协议仍不可直接用于后续 style-constrained RL 主线推进。
+- 现阶段优先级是纯 RL 主线（含 profiling、benchmark 准备与更严格 readiness gating），风格工作暂缓。
+
 ---
 
 ## 关键脚本

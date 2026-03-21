@@ -185,4 +185,4 @@ It must never become a hard dependency for the main RL path.
 - `dataset_schema_version: v1`
 - `rules_version: v1_python_rules`**
 
-Current priority after Phase 1.1 is to strengthen and scale the pure RL path before returning to the deferred style-constrained phases.
+Current priority after Phase 2.1 is profiling, benchmark preparation, and stricter pure-RL readiness gating before returning to deferred style-constrained phases.

@@ -115,22 +115,50 @@ def _run_proxy_eval(candidate_ckpt: Path, baseline_ckpt: Path, games: int, max_m
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="Phase 3 strength benchmark preparation vs Pikafish")
-    ap.add_argument("--checkpoint", required=True)
-    ap.add_argument("--benchmark-config", default="configs/benchmark_pikafish_v1.yaml")
+    ap = argparse.ArgumentParser(
+        description="Phase 3 strength benchmark preparation vs Pikafish",
+        epilog=(
+            "Dry-run mode still requires --checkpoint so checkpoint metadata/checkpoint_id can be recorded; "
+            "it only skips engine gameplay."
+        ),
+    )
+    ap.add_argument(
+        "--checkpoint",
+        required=True,
+        help="Candidate checkpoint JSON. Required even in --dry-run to record checkpoint metadata.",
+    )
+    ap.add_argument(
+        "--benchmark-config",
+        default="configs/benchmark_pikafish_v1.yaml",
+        help="Versioned benchmark protocol config.",
+    )
     ap.add_argument("--engine-path", default="")
     ap.add_argument("--engine-version", default="")
     ap.add_argument("--seed", type=int, default=None)
-    ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Validate benchmark protocol metadata/hash wiring only (no engine gameplay).",
+    )
     ap.add_argument("--proxy-baseline-checkpoint", default="")
     ap.add_argument("--out", default="")
     args = ap.parse_args()
 
     cfg_path = Path(args.benchmark_config)
+    if not cfg_path.exists():
+        raise SystemExit(
+            f"Benchmark config not found: {cfg_path}. "
+            "Provide --benchmark-config with a valid file path."
+        )
     cfg = load_benchmark_config(cfg_path)
     _validate_config(cfg)
 
     candidate_path = Path(args.checkpoint)
+    if not candidate_path.exists():
+        raise SystemExit(
+            f"Checkpoint not found: {candidate_path}. "
+            "Dry-run still requires a real checkpoint file to capture checkpoint metadata."
+        )
     _, candidate_meta = PolicyValueNet.load_checkpoint(candidate_path)
 
     engine_path = args.engine_path or os.environ.get("PIKAFISH_PATH", "")
@@ -172,7 +200,9 @@ def main() -> int:
     else:
         if not engine_path:
             raise SystemExit(
-                "PIKAFISH_PATH is required unless --dry-run or --proxy-baseline-checkpoint is used."
+                "PIKAFISH_PATH/--engine-path is required for non-dry-run execution. "
+                "Use --dry-run for protocol validation without engine gameplay, "
+                "or --proxy-baseline-checkpoint for checkpoint-vs-checkpoint proxy validation."
             )
         payload["status"] = "blocked_missing_engine_runtime"
         payload["notes"].append(
