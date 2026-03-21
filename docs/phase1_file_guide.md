@@ -17,9 +17,18 @@ self-play -> replay -> train -> reload -> evaluate
 - `alphacchess/phase1_selfplay.py`
   - Small-scale self-play loop.
   - Produces replay samples with observation, selected policy action, and value target.
+  - Also records per-game termination semantics:
+    - `ended_naturally`
+    - `hit_step_cap`
+    - `terminal_reason`
+    - `result_label` (`win` / `loss` / `draw` / `truncated_draw`, red-perspective)
 
 - `alphacchess/phase1_replay.py`
   - Replay dataset schema and metadata validation.
+  - Replay schema version is now `phase1_replay_v2` (strictly validated).
+  - Stores two payloads:
+    - `samples`: per-position supervision records
+    - `games`: per-game semantic summaries (termination/result metadata)
   - Ensures replay includes version metadata:
     - `action_encoding_version`
     - `observation_encoding_version`
@@ -78,6 +87,26 @@ self-play -> replay -> train -> reload -> evaluate
     python scripts/export_replay_stats.py --replay artifacts/phase1/replays/iter_002.json
     ```
   - Passing result: metadata is version-valid and policy shape confirms action-space alignment (`8100`).
+  - Hardening output now includes replay-quality diagnostics:
+    - `num_games`
+    - `natural_terminations`
+    - `step_cap_truncations`
+    - `result_counts`
+    - `terminal_reason_counts`
+    - `value_non_zero_fraction`
+    - `value_positive_count` / `value_zero_count` / `value_negative_count`
+
+## How to interpret replay stats (Phase 1 close-out semantics)
+
+- If `step_cap_truncations` is high and `result_counts.truncated_draw` dominates, then replay is truncation-heavy and value targets will mostly be `0`.
+- If `natural_terminations` contains wins/losses, then at least some non-zero value supervision should appear.
+- `value_non_zero_fraction` is the fastest single indicator for whether value learning is seeing terminal supervision beyond draws.
+- `terminal_reason_counts` helps verify whether natural terminal rules are actually being hit (e.g., `black_general_captured`, `no_legal_moves`) or whether the loop mostly exits via `max_moves_truncation`.
+
+## Schema/version note
+
+- Replay schema extension from `phase1_replay_v1` to `phase1_replay_v2` is intentional.
+- Strict metadata validation remains enabled; mismatched schema version will fail fast at load time.
 
 ## Artifact layout
 

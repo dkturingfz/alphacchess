@@ -6,7 +6,7 @@ import random
 from typing import Dict, List, Sequence
 
 from .phase1_model import PIECE_VALUE, PolicyValueNet
-from .phase1_replay import ReplayDataset, ReplaySample, make_replay_metadata
+from .phase1_replay import ReplayDataset, ReplayGame, ReplaySample, make_replay_metadata
 from .xiangqi_game import BLACK, RED, XiangqiState, decode_action, from_square
 
 
@@ -25,6 +25,8 @@ class SelfPlaySummary:
     red_wins: int
     black_wins: int
     draws: int
+    natural_terminations: int
+    step_cap_truncations: int
 
 
 def _masked_policy_probs(logits: List[float], legal_actions: Sequence[int], temperature: float = 1.0) -> List[float]:
@@ -99,9 +101,11 @@ def run_selfplay(model: PolicyValueNet, cfg: SelfPlayConfig, seed: int = 0) -> t
     game = XiangqiGame()
 
     all_samples: List[ReplaySample] = []
+    game_summaries: List[ReplayGame] = []
     red_wins = black_wins = draws = 0
+    natural_terminations = step_cap_truncations = 0
 
-    for _ in range(cfg.games):
+    for game_index in range(cfg.games):
         state = game.new_initial_state()
         game_positions: List[Dict] = []
         moves = 0
@@ -118,14 +122,38 @@ def run_selfplay(model: PolicyValueNet, cfg: SelfPlayConfig, seed: int = 0) -> t
             state.apply_action(action)
             moves += 1
 
-        returns = state.returns() if state.is_terminal() else [0.0, 0.0]
+        ended_naturally = state.is_terminal()
+        hit_step_cap = (not ended_naturally) and (moves >= cfg.max_moves)
+        terminal_reason = state.terminal_reason() if ended_naturally else "max_moves_truncation"
+        returns = state.returns() if ended_naturally else [0.0, 0.0]
+        if ended_naturally:
+            natural_terminations += 1
+        if hit_step_cap:
+            step_cap_truncations += 1
+        result_label = "draw"
         if returns[0] > returns[1]:
             red_wins += 1
+            result_label = "win"
         elif returns[1] > returns[0]:
             black_wins += 1
+            result_label = "loss"
         else:
             draws += 1
+            if hit_step_cap:
+                result_label = "truncated_draw"
 
+        game_summaries.append(
+            ReplayGame(
+                game_index=game_index,
+                moves=moves,
+                ended_naturally=ended_naturally,
+                hit_step_cap=hit_step_cap,
+                terminal_reason=terminal_reason,
+                result_label=result_label,
+                red_return=float(returns[0]),
+                black_return=float(returns[1]),
+            )
+        )
         for p in game_positions:
             player = p["player"]
             v = returns[0] if player == RED else returns[1] if player == BLACK else 0.0
@@ -135,13 +163,16 @@ def run_selfplay(model: PolicyValueNet, cfg: SelfPlayConfig, seed: int = 0) -> t
                     policy_action=p["policy_action"],
                     value_target=float(v),
                     player=player,
+                    game_index=game_index,
                 )
             )
 
-    return ReplayDataset(metadata=make_replay_metadata(), samples=all_samples), SelfPlaySummary(
+    return ReplayDataset(metadata=make_replay_metadata(), samples=all_samples, games=game_summaries), SelfPlaySummary(
         games=cfg.games,
         samples=len(all_samples),
         red_wins=red_wins,
         black_wins=black_wins,
         draws=draws,
+        natural_terminations=natural_terminations,
+        step_cap_truncations=step_cap_truncations,
     )
