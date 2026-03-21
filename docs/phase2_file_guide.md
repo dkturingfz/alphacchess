@@ -6,7 +6,7 @@ Phase 2 focuses on the pure RL mainline only:
 
 `self-play -> replay -> train -> checkpoint evaluation`
 
-This guide covers the developer-facing files/scripts used to run and validate the Phase 2 path.
+This guide covers the developer-facing files/scripts used to run and validate the Phase 2 path, including the Phase 2.1 extended-run validation close-out.
 
 ## Core scripts
 
@@ -37,6 +37,15 @@ Loads one replay file and prints explicit quality indicators including:
 - `value_non_zero_fraction`
 - value sign counts
 
+
+### `scripts/summarize_extended_run.py`
+
+Phase 2.1 helper that reads `train_summary.json` from a multi-iteration run and emits a consolidated trend report:
+- per-iteration replay-quality trend rows
+- checkpoint-vs-previous / optional fixed-baseline trend rows
+- aggregate non-zero value supervision statistics
+- readiness flags for the next stage decision
+
 ### `scripts/evaluate_vs_random.py`
 
 Quick baseline check of one checkpoint against random play.
@@ -48,7 +57,7 @@ Reproducible internal checkpoint comparison:
 - fixed seeds and game count
 - structured JSON output with score and metadata
 
-## Typical Phase 2 validation flow
+## Typical Phase 2 / Phase 2.1 validation flow
 
 ```bash
 python scripts/train_selfplay.py --iterations 3 --games-per-iter 24 --out-dir artifacts/phase2_smoke
@@ -58,6 +67,8 @@ python scripts/evaluate_checkpoints.py \
   --candidate artifacts/phase2_smoke/checkpoints/iter_002.json \
   --baseline artifacts/phase2_smoke/checkpoints/iter_000.json \
   --games 12 --seed 7
+python scripts/summarize_extended_run.py \
+  --train-summary artifacts/phase2_smoke/train_summary.json
 ```
 
 ## Notes
@@ -65,3 +76,10 @@ python scripts/evaluate_checkpoints.py \
 - Phase 2 remains independent of style-constrained RL features.
 - Phase 2 remains independent of Pikafish in the training core.
 - If replay quality degrades, inspect replay stats first before tuning scale.
+
+
+## Phase 2.1 note
+
+- Phase 2.1 stays on the pure RL path only (no style KL/search guidance).
+- It extends the run length to observe trends across iterations, not one-shot snapshots.
+- It remains independent of Pikafish in the training core.
