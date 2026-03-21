@@ -859,3 +859,22 @@ python -m pytest -q
 python scripts/validate_xiangqi_game.py
 python scripts/smoke_alphazero_entry.py
 ```
+
+---
+
+## Phase Status Update (Phase 0 + Phase 1)
+
+- **Phase 0** foundation is in place (Python Xiangqi rules core, OpenSpiel-compatible Game/State contract, validation/smoke path).
+- **Phase 1** minimal AlphaZero-like loop is now in place:
+  - self-play
+  - replay export/load with version validation
+  - training + checkpointing
+  - reload + evaluation vs random baseline
+
+### Phase 1 scripts
+
+- `scripts/train_selfplay.py`
+- `scripts/evaluate_vs_random.py`
+- `scripts/export_replay_stats.py`
+
+See `docs/phase1_file_guide.md` for usage and passing criteria.
