@@ -83,3 +83,8 @@ python scripts/summarize_extended_run.py \
 - Phase 2.1 stays on the pure RL path only (no style KL/search guidance).
 - It extends the run length to observe trends across iterations, not one-shot snapshots.
 - It remains independent of Pikafish in the training core.
+
+
+## Phase 3 handoff
+
+After Phase 2.1 trend validation, move to `docs/phase3_file_guide.md` for profiling, stricter readiness gating, and benchmark-preparation workflow.

@@ -12,9 +12,21 @@
 - **Phase 1.1**：回放与 value 监督质量加固
 - **Phase 2（当前主线）**：纯 RL 放大与稳定化（大规模 self-play/train、回放质量监控、checkpoint 对比评测）
 - **Phase 2.1（当前验证）**：更长窗口纯 RL 扩展运行验证（多迭代趋势汇总、稳定性/非退化性复核）
+- **Phase 3（当前进行中）**：profiling + benchmark preparation（更严格 readiness 解释、benchmark 元数据可复现化、不做强结论过度宣称）
 - **Phase 1b（已实现，当前延后）**：风格参考模型训练、风格评测、灰区恢复流程与冻结 checkpoint 输出
 
 如需快速上手纯 RL 主线（含 Phase 2.1 扩展运行验证），请先阅读：`docs/phase2_file_guide.md`。
+
+
+## Phase 3 当前结论边界（2026-03-21）
+
+- 当前重点是“可测量性与协议准备”，不是“最终棋力结论”。
+- 强度 benchmark 与 style evaluation 维持脚本级分离：
+  - 强度：`scripts/evaluate_vs_pikafish.py`
+  - 风格：`scripts/evaluate_style.py`
+- 风格约束 RL（KL / 搜索先验）继续延后，不在当前主线范围。
+- 纯 RL 训练核心仍不依赖 Pikafish；Pikafish 只用于基准评测路径。
+
 
 ---
 
