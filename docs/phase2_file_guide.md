@@ -44,7 +44,8 @@ Phase 2.1 helper that reads `train_summary.json` from a multi-iteration run and 
 - per-iteration replay-quality trend rows
 - checkpoint-vs-previous / optional fixed-baseline trend rows
 - aggregate non-zero value supervision statistics
-- readiness flags for the next stage decision
+- stricter readiness checks and graded decision flags (`pass` / `caution` / `fail`)
+- conservative handoff gate (`ready_for_next_stage`) for Phase 3 prep decisions
 
 ### `scripts/evaluate_vs_random.py`
 
@@ -76,6 +77,28 @@ python scripts/summarize_extended_run.py \
 - Phase 2 remains independent of style-constrained RL features.
 - Phase 2 remains independent of Pikafish in the training core.
 - If replay quality degrades, inspect replay stats first before tuning scale.
+
+## How to interpret Phase 2.1 trends
+
+### Replay-quality trend
+
+- `value_non_zero_fraction` should stay visible and non-trivial across iterations; sustained near-zero values indicate supervision degeneracy risk.
+- `step_cap_truncations` should not dominate over long windows; rising truncation share is a caution signal even if loss still decreases.
+- `natural_terminations` should remain observable (not necessarily high), otherwise outcome supervision becomes fragile.
+
+### Checkpoint trend
+
+- `vs_previous` is a local progress signal (did the latest checkpoint avoid immediate regression).
+- `vs_fixed_baseline` is a longer-horizon signal (is the run actually moving away from an older anchor).
+- Temporary noise is normal at small game counts; Phase 2.1 decisions should use multi-iteration trend consistency, not a single spike.
+
+### Stricter readiness logic
+
+`scripts/summarize_extended_run.py` Phase 2.1 close-out should be read as a gate, not as a celebratory metric dump:
+
+- `pass`: quality and progress checks are consistently acceptable for Phase 3 preparation.
+- `caution`: some checks are borderline; extend pure-RL run and re-validate before claiming readiness.
+- `fail`: clear instability/degradation; stop-and-fix before advancing.
 
 
 ## Phase 2.1 note

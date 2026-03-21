@@ -84,6 +84,10 @@ python scripts/evaluate_vs_pikafish.py \
 
 If local engine path is not configured, `--dry-run` still validates benchmark metadata and hashing.
 
+Important interpretation:
+- `--dry-run` and proxy outputs validate protocol wiring, schema, metadata recording, and reproducibility plumbing.
+- They do **not** establish final model strength against a real engine runtime.
+
 ## Separation discipline
 
 - Strength benchmark path: `scripts/evaluate_vs_pikafish.py`
@@ -96,3 +100,13 @@ Do not merge these paths in Phase 3.
 - Engine-runtime gameplay integration against Pikafish is still local-environment dependent.
 - Current phase does not make strong benchmark-strength claims.
 - Any optimization should be deferred unless repeatedly justified by profiling outputs.
+
+## Meaning of "conditionally ready"
+
+In the current repository state, "ready"/"conditionally ready" means:
+- profiling + protocol preparation can proceed,
+- benchmark outputs are reproducible at metadata/procedure level,
+- and pure-RL readiness checks are currently acceptable.
+
+It does **not** mean:
+- milestone-grade strength conclusions are already established.
