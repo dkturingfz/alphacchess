@@ -71,14 +71,14 @@ Goal:
 - evaluate style quality globally and by phase
 - enforce unusable / gray / usable / preferred thresholds
 
-See: `plans/phase1b.md`
+See: `plans/phase4_style_reference.md`
 
 ### 8. Phase 5 — KL-Constrained Style RL
 Goal:
 - add loss-level KL regularization against `pi_style`
 - explore the strength/style tradeoff with structured beta search
 
-See: `plans/phase2a.md`
+See: `plans/See: `plans/phase5_kl_style_rl.md`.md`
 
 ### 9. Phase 6 — Search-Level Style Guidance (Optional)
 Goal:
@@ -86,7 +86,7 @@ Goal:
 - compare against the best KL-only baseline
 - keep this path experimental and isolated
 
-See: `plans/phase2b.md`
+See: `plans/phase6_search_style_guidance.md`
 
 ---
 
