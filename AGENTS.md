@@ -184,3 +184,5 @@ It must never become a hard dependency for the main RL path.
 - `observation_encoding_version: v1_15planes`
 - `dataset_schema_version: v1`
 - `rules_version: v1_python_rules`**
+
+Current priority after Phase 1.1 is to strengthen and scale the pure RL path before returning to the deferred style-constrained phases.
