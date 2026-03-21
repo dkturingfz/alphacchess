@@ -87,6 +87,7 @@ class XiangqiState:
         self._current_player = current_player
         self.move_number = move_number
         self._winner: Optional[int] = None
+        self._terminal_reason: Optional[str] = None
 
     @classmethod
     def from_fen(cls, fen: str) -> "XiangqiState":
@@ -111,7 +112,10 @@ class XiangqiState:
         return st
 
     def clone(self) -> "XiangqiState":
-        return XiangqiState([row[:] for row in self.board], self._current_player, self.move_number)
+        cloned = XiangqiState([row[:] for row in self.board], self._current_player, self.move_number)
+        cloned._winner = self._winner
+        cloned._terminal_reason = self._terminal_reason
+        return cloned
 
     def current_player(self) -> int:
         return self._current_player
@@ -121,6 +125,7 @@ class XiangqiState:
             return True
         if not self.legal_actions():
             self._winner = -self._current_player
+            self._terminal_reason = "no_legal_moves"
             return True
         return False
 
@@ -132,6 +137,11 @@ class XiangqiState:
         if self._winner == BLACK:
             return [-1.0, 1.0]
         return [0.0, 0.0]
+
+    def terminal_reason(self) -> str:
+        if not self.is_terminal():
+            return "none"
+        return self._terminal_reason or "unknown"
 
     def observation_tensor(self) -> List[List[List[int]]]:
         planes = [[[0 for _ in range(BOARD_FILES)] for _ in range(BOARD_RANKS)] for _ in range(15)]
@@ -196,12 +206,16 @@ class XiangqiState:
         black_g = self._locate_general(BLACK)
         if red_g is None and black_g is None:
             self._winner = 0
+            self._terminal_reason = "both_generals_missing"
         elif red_g is None:
             self._winner = BLACK
+            self._terminal_reason = "red_general_captured"
         elif black_g is None:
             self._winner = RED
+            self._terminal_reason = "black_general_captured"
         else:
             self._winner = None
+            self._terminal_reason = None
 
     def _is_in_check(self, color: int) -> bool:
         g = self._locate_general(color)
