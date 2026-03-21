@@ -9,6 +9,8 @@ def test_one_iteration_selfplay_train_reload_evaluate(tmp_path):
     model = PolicyValueNet.for_xiangqi_v1(seed=3)
     replay, summary = run_selfplay(model, SelfPlayConfig(games=4, max_moves=80), seed=3)
     assert summary.samples > 0
+    assert summary.natural_terminations + summary.step_cap_truncations == summary.games
+    assert len(replay.games) == summary.games
 
     replay_path = tmp_path / "replay.json"
     replay.save(replay_path)

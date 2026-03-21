@@ -68,6 +68,8 @@ def main() -> int:
                 "checkpoint": str(ckpt_path),
                 "selfplay_games": sp.games,
                 "samples": sp.samples,
+                "natural_terminations": sp.natural_terminations,
+                "step_cap_truncations": sp.step_cap_truncations,
                 "train_steps": ts.steps,
                 "last_loss": ts.metrics[-1]["loss"] if ts.metrics else None,
                 "quick_eval_win_rate": quick_eval.win_rate,
