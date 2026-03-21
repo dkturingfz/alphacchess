@@ -1,0 +1,18 @@
+engine_name: pikafish
+engine_protocol: ucci
+
+search_limit_type: depth
+depth: 5
+
+games_per_side: 20
+evaluation_seeds:
+  - 42
+  - 137
+
+swap_colors: true
+
+resign_enabled: false
+draw_adjudication_enabled: false
+
+max_moves: 300
+max_moves_result: draw
