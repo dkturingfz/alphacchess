@@ -1,3 +1,5 @@
+# Phase 0 — Foundation
+
 ## Goal
 
 Build a correct, OpenSpiel-compatible pure-Python Xiangqi MVP and validate that it can survive a minimal AlphaZero-compatible smoke path.
