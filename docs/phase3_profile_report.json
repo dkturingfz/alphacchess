@@ -1,0 +1,414 @@
+{
+  "metadata": {
+    "action_encoding_version": "v1_8100_from_to",
+    "observation_encoding_version": "v1_15planes",
+    "dataset_schema_version": "v1",
+    "rules_version": "v1_python_rules"
+  },
+  "profile_schema_version": "phase3_profile_v1",
+  "inputs": {
+    "legal_action_iterations": 40,
+    "clone_iterations": 120,
+    "apply_action_iterations": 40,
+    "seed": 7,
+    "initial_state_legal_actions": 44
+  },
+  "hotspot_ranking": [
+    {
+      "component": "selfplay_loop",
+      "elapsed_sec": 16.227663189998566
+    },
+    {
+      "component": "checkpoint_eval",
+      "elapsed_sec": 3.704980468002759
+    },
+    {
+      "component": "apply_action",
+      "elapsed_sec": 1.1288698489988747
+    },
+    {
+      "component": "legal_actions",
+      "elapsed_sec": 0.363517702997342
+    },
+    {
+      "component": "replay_serialization",
+      "elapsed_sec": 0.1519705190003151
+    },
+    {
+      "component": "clone",
+      "elapsed_sec": 0.0005689809986506589
+    }
+  ],
+  "component_details": {
+    "legal_actions": {
+      "elapsed_sec": 0.363517702997342,
+      "top_functions_by_cumulative_time": [
+        {
+          "function": "profile_rules.py:bench_legal_actions:55",
+          "primitive_calls": 1,
+          "total_calls": 1,
+          "total_time_sec": 0.00022336300000000002,
+          "cumulative_time_sec": 0.363309478
+        },
+        {
+          "function": "xiangqi_game.py:legal_actions:159",
+          "primitive_calls": 40,
+          "total_calls": 40,
+          "total_time_sec": 0.008319897,
+          "cumulative_time_sec": 0.36308611500000004
+        },
+        {
+          "function": "xiangqi_game.py:_is_in_check:220",
+          "primitive_calls": 1760,
+          "total_calls": 1760,
+          "total_time_sec": 0.07892647,
+          "cumulative_time_sec": 0.34462375300000003
+        },
+        {
+          "function": "xiangqi_game.py:_pseudo_piece_moves:248",
+          "primitive_calls": 28720,
+          "total_calls": 28720,
+          "total_time_sec": 0.09352637500000001,
+          "cumulative_time_sec": 0.21541178500000002
+        },
+        {
+          "function": "xiangqi_game.py:_ray_moves:316",
+          "primitive_calls": 7200,
+          "total_calls": 7200,
+          "total_time_sec": 0.056493445,
+          "cumulative_time_sec": 0.065834139
+        },
+        {
+          "function": "xiangqi_game.py:color_of:51",
+          "primitive_calls": 99920,
+          "total_calls": 99920,
+          "total_time_sec": 0.033751715,
+          "cumulative_time_sec": 0.044176404
+        },
+        {
+          "function": "xiangqi_game.py:_locate_general:196",
+          "primitive_calls": 3520,
+          "total_calls": 3520,
+          "total_time_sec": 0.030489374000000003,
+          "cumulative_time_sec": 0.030489374000000003
+        },
+        {
+          "function": "xiangqi_game.py:add:252",
+          "primitive_calls": 32240,
+          "total_calls": 32240,
+          "total_time_sec": 0.024150426000000003,
+          "cumulative_time_sec": 0.029294651
+        }
+      ]
+    },
+    "clone": {
+      "elapsed_sec": 0.0005689809986506589,
+      "top_functions_by_cumulative_time": [
+        {
+          "function": "profile_rules.py:bench_clone:61",
+          "primitive_calls": 1,
+          "total_calls": 1,
+          "total_time_sec": 8.3861e-05,
+          "cumulative_time_sec": 0.0005630110000000001
+        },
+        {
+          "function": "xiangqi_game.py:clone:114",
+          "primitive_calls": 120,
+          "total_calls": 120,
+          "total_time_sec": 0.00014324500000000002,
+          "cumulative_time_sec": 0.00036480400000000004
+        },
+        {
+          "function": "xiangqi_game.py:<listcomp>:115",
+          "primitive_calls": 120,
+          "total_calls": 120,
+          "total_time_sec": 0.00016526,
+          "cumulative_time_sec": 0.00016526
+        },
+        {
+          "function": "xiangqi_game.py:new_initial_state:74",
+          "primitive_calls": 1,
+          "total_calls": 1,
+          "total_time_sec": 2.316e-06,
+          "cumulative_time_sec": 0.000114346
+        },
+        {
+          "function": "xiangqi_game.py:from_fen:92",
+          "primitive_calls": 1,
+          "total_calls": 1,
+          "total_time_sec": 7.135500000000001e-05,
+          "cumulative_time_sec": 0.00011203000000000001
+        },
+        {
+          "function": "xiangqi_game.py:__init__:85",
+          "primitive_calls": 121,
+          "total_calls": 121,
+          "total_time_sec": 5.844e-05,
+          "cumulative_time_sec": 5.844e-05
+        },
+        {
+          "function": "xiangqi_game.py:_recompute_winner:204",
+          "primitive_calls": 1,
+          "total_calls": 1,
+          "total_time_sec": 1.906e-06,
+          "cumulative_time_sec": 1.8927e-05
+        },
+        {
+          "function": "xiangqi_game.py:_locate_general:196",
+          "primitive_calls": 2,
+          "total_calls": 2,
+          "total_time_sec": 1.7021000000000002e-05,
+          "cumulative_time_sec": 1.7021000000000002e-05
+        }
+      ]
+    },
+    "apply_action": {
+      "elapsed_sec": 1.1288698489988747,
+      "top_functions_by_cumulative_time": [
+        {
+          "function": "profile_rules.py:bench_apply_action:66",
+          "primitive_calls": 1,
+          "total_calls": 1,
+          "total_time_sec": 0.0011953270000000002,
+          "cumulative_time_sec": 1.128697388
+        },
+        {
+          "function": "xiangqi_game.py:legal_actions:159",
+          "primitive_calls": 120,
+          "total_calls": 120,
+          "total_time_sec": 0.024967939,
+          "cumulative_time_sec": 1.1253785470000002
+        },
+        {
+          "function": "xiangqi_game.py:_is_in_check:220",
+          "primitive_calls": 5418,
+          "total_calls": 5418,
+          "total_time_sec": 0.235306226,
+          "cumulative_time_sec": 1.0720259520000002
+        },
+        {
+          "function": "xiangqi_game.py:_pseudo_piece_moves:248",
+          "primitive_calls": 84960,
+          "total_calls": 84960,
+          "total_time_sec": 0.28113682100000004,
+          "cumulative_time_sec": 0.6874601610000001
+        },
+        {
+          "function": "xiangqi_game.py:apply_action:178",
+          "primitive_calls": 40,
+          "total_calls": 40,
+          "total_time_sec": 0.0005862510000000001,
+          "cumulative_time_sec": 0.384540955
+        },
+        {
+          "function": "xiangqi_game.py:is_terminal:123",
+          "primitive_calls": 40,
+          "total_calls": 40,
+          "total_time_sec": 0.000181542,
+          "cumulative_time_sec": 0.37378166700000004
+        },
+        {
+          "function": "xiangqi_game.py:_ray_moves:316",
+          "primitive_calls": 21864,
+          "total_calls": 21864,
+          "total_time_sec": 0.18328977300000002,
+          "cumulative_time_sec": 0.21705517900000001
+        },
+        {
+          "function": "xiangqi_game.py:color_of:51",
+          "primitive_calls": 324013,
+          "total_calls": 324013,
+          "total_time_sec": 0.104160497,
+          "cumulative_time_sec": 0.13851370600000001
+        }
+      ]
+    },
+    "selfplay_loop": {
+      "elapsed_sec": 16.227663189998566,
+      "top_functions_by_cumulative_time": [
+        {
+          "function": "profile_rules.py:bench_selfplay_overhead:78",
+          "primitive_calls": 1,
+          "total_calls": 1,
+          "total_time_sec": 0.002142737,
+          "cumulative_time_sec": 16.226871789
+        },
+        {
+          "function": "phase1_selfplay.py:run_selfplay:116",
+          "primitive_calls": 1,
+          "total_calls": 1,
+          "total_time_sec": 0.00036159200000000004,
+          "cumulative_time_sec": 16.224723149000003
+        },
+        {
+          "function": "phase1_selfplay.py:play_one:132",
+          "primitive_calls": 3,
+          "total_calls": 3,
+          "total_time_sec": 0.05039372,
+          "cumulative_time_sec": 16.224208152000003
+        },
+        {
+          "function": "xiangqi_game.py:legal_actions:159",
+          "primitive_calls": 2054,
+          "total_calls": 2054,
+          "total_time_sec": 0.377894122,
+          "cumulative_time_sec": 15.706158561
+        },
+        {
+          "function": "phase1_selfplay.py:choose_action:66",
+          "primitive_calls": 41,
+          "total_calls": 41,
+          "total_time_sec": 0.013511924000000002,
+          "cumulative_time_sec": 15.433755158
+        },
+        {
+          "function": "~:<built-in method builtins.max>:0",
+          "primitive_calls": 108,
+          "total_calls": 108,
+          "total_time_sec": 0.109241614,
+          "cumulative_time_sec": 14.97188891
+        },
+        {
+          "function": "phase1_selfplay.py:<lambda>:112",
+          "primitive_calls": 964,
+          "total_calls": 964,
+          "total_time_sec": 0.019239879,
+          "cumulative_time_sec": 14.862386754000001
+        },
+        {
+          "function": "phase1_selfplay.py:terminal_bonus:99",
+          "primitive_calls": 964,
+          "total_calls": 964,
+          "total_time_sec": 0.02487336,
+          "cumulative_time_sec": 14.809754434
+        }
+      ]
+    },
+    "replay_serialization": {
+      "elapsed_sec": 0.1519705190003151,
+      "top_functions_by_cumulative_time": [
+        {
+          "function": "profile_rules.py:bench_replay_serialization:91",
+          "primitive_calls": 1,
+          "total_calls": 1,
+          "total_time_sec": 0.000387687,
+          "cumulative_time_sec": 0.151808529
+        },
+        {
+          "function": "phase1_replay.py:to_json:43",
+          "primitive_calls": 1,
+          "total_calls": 1,
+          "total_time_sec": 0.00113553,
+          "cumulative_time_sec": 0.148045748
+        },
+        {
+          "function": "phase1_replay.py:<listcomp>:47",
+          "primitive_calls": 1,
+          "total_calls": 1,
+          "total_time_sec": 0.000247603,
+          "cumulative_time_sec": 0.137674835
+        },
+        {
+          "function": "dataclasses.py:asdict:1217",
+          "primitive_calls": 19,
+          "total_calls": 19,
+          "total_time_sec": 4.2249e-05,
+          "cumulative_time_sec": 0.137586928
+        },
+        {
+          "function": "dataclasses.py:_asdict_inner:1241",
+          "primitive_calls": 19,
+          "total_calls": 25894,
+          "total_time_sec": 0.042231274,
+          "cumulative_time_sec": 0.137468846
+        },
+        {
+          "function": "dataclasses.py:<genexpr>:1273",
+          "primitive_calls": 272,
+          "total_calls": 28577,
+          "total_time_sec": 0.013081025000000001,
+          "cumulative_time_sec": 0.13456762900000002
+        },
+        {
+          "function": "copy.py:deepcopy:128",
+          "primitive_calls": 23053,
+          "total_calls": 23053,
+          "total_time_sec": 0.034818898,
+          "cumulative_time_sec": 0.04662061
+        },
+        {
+          "function": "dataclasses.py:_is_dataclass_instance:1205",
+          "primitive_calls": 25913,
+          "total_calls": 25913,
+          "total_time_sec": 0.008053507,
+          "cumulative_time_sec": 0.022377424
+        }
+      ]
+    },
+    "checkpoint_eval": {
+      "elapsed_sec": 3.704980468002759,
+      "top_functions_by_cumulative_time": [
+        {
+          "function": "profile_rules.py:bench_checkpoint_eval:97",
+          "primitive_calls": 1,
+          "total_calls": 1,
+          "total_time_sec": 0.00014317300000000002,
+          "cumulative_time_sec": 3.704921251
+        },
+        {
+          "function": "phase1_eval.py:evaluate_model_vs_model:113",
+          "primitive_calls": 1,
+          "total_calls": 1,
+          "total_time_sec": 0.024662608000000003,
+          "cumulative_time_sec": 3.7047755700000002
+        },
+        {
+          "function": "xiangqi_game.py:legal_actions:159",
+          "primitive_calls": 648,
+          "total_calls": 648,
+          "total_time_sec": 0.09106859,
+          "cumulative_time_sec": 3.3119641090000003
+        },
+        {
+          "function": "xiangqi_game.py:_is_in_check:220",
+          "primitive_calls": 20282,
+          "total_calls": 20282,
+          "total_time_sec": 0.815928877,
+          "cumulative_time_sec": 3.107336369
+        },
+        {
+          "function": "xiangqi_game.py:_pseudo_piece_moves:248",
+          "primitive_calls": 230960,
+          "total_calls": 230960,
+          "total_time_sec": 0.807741119,
+          "cumulative_time_sec": 1.804173566
+        },
+        {
+          "function": "phase1_eval.py:_model_action:46",
+          "primitive_calls": 160,
+          "total_calls": 160,
+          "total_time_sec": 0.023900872,
+          "cumulative_time_sec": 1.163078577
+        },
+        {
+          "function": "xiangqi_game.py:apply_action:178",
+          "primitive_calls": 160,
+          "total_calls": 160,
+          "total_time_sec": 0.004340676,
+          "cumulative_time_sec": 0.8867038580000001
+        },
+        {
+          "function": "xiangqi_game.py:is_terminal:123",
+          "primitive_calls": 168,
+          "total_calls": 168,
+          "total_time_sec": 0.0007008040000000001,
+          "cumulative_time_sec": 0.817032504
+        }
+      ]
+    }
+  },
+  "notes": [
+    "This profile is a low-scale deterministic sample for hotspot ranking, not a final throughput benchmark.",
+    "Use this output to decide whether optimization is justified before architectural changes."
+  ]
+}
