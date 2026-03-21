@@ -1,0 +1,91 @@
+# Phase 1 File Guide (Minimal AlphaZero-like Loop)
+
+This guide documents the concrete Phase 1 files added for the minimal loop:
+
+self-play -> replay -> train -> reload -> evaluate
+
+## Core Python modules
+
+- `alphacchess/phase1_model.py`
+  - `PolicyValueNet` v1 implementation.
+  - Contract:
+    - input shape matches `(15, 10, 9)`
+    - policy head size is exactly `8100`
+    - value head output is scalar
+  - Supports checkpoint save/load with version metadata.
+
+- `alphacchess/phase1_selfplay.py`
+  - Small-scale self-play loop.
+  - Produces replay samples with observation, selected policy action, and value target.
+
+- `alphacchess/phase1_replay.py`
+  - Replay dataset schema and metadata validation.
+  - Ensures replay includes version metadata:
+    - `action_encoding_version`
+    - `observation_encoding_version`
+    - `dataset_schema_version`
+    - `rules_version`
+    - `replay_schema_version`
+
+- `alphacchess/phase1_train.py`
+  - Trainer v1 over replay data.
+  - Runs mini-batch updates and returns training metrics.
+
+- `alphacchess/phase1_eval.py`
+  - Evaluator v1 against random baseline.
+  - Produces deterministic/reproducible outputs with seed.
+
+## Required CLI scripts
+
+- `scripts/train_selfplay.py`
+  - Runs several iterations of:
+    1. self-play generation
+    2. replay write
+    3. training
+    4. checkpoint write
+    5. quick eval vs random
+  - Example:
+    ```bash
+    python scripts/train_selfplay.py \
+      --iterations 3 \
+      --games-per-iter 8 \
+      --max-moves 80 \
+      --epochs 2 \
+      --batch-size 32 \
+      --lr 0.002 \
+      --seed 11 \
+      --out-dir artifacts/phase1
+    ```
+  - Passing result: script completes and writes `train_summary.json`, replay files, and checkpoints.
+
+- `scripts/evaluate_vs_random.py`
+  - Loads checkpoint and evaluates vs random.
+  - Example:
+    ```bash
+    python scripts/evaluate_vs_random.py \
+      --checkpoint artifacts/phase1/checkpoints/iter_002.json \
+      --games 100 \
+      --max-moves 120 \
+      --seed 11 \
+      --out artifacts/phase1/eval_100.json
+    ```
+  - Passing result: JSON output shows `win_rate > 0.90` over 100 games.
+
+- `scripts/export_replay_stats.py`
+  - Reads replay and exports stats + metadata.
+  - Example:
+    ```bash
+    python scripts/export_replay_stats.py --replay artifacts/phase1/replays/iter_002.json
+    ```
+  - Passing result: metadata is version-valid and policy shape confirms action-space alignment (`8100`).
+
+## Artifact layout
+
+By default, Phase 1 artifacts are written under `artifacts/phase1/`:
+
+- `artifacts/phase1/replays/iter_XXX.json`
+- `artifacts/phase1/checkpoints/iter_XXX.json`
+- `artifacts/phase1/train_summary.json`
+- `artifacts/phase1/eval_100.json` (when requested)
+
+These artifacts preserve Phase 1 version metadata for compatibility checks.

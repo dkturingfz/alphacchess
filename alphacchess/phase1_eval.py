@@ -1,0 +1,103 @@
+from __future__ import annotations
+
+from dataclasses import dataclass
+import random
+from typing import Dict
+
+from .phase1_model import PolicyValueNet
+from .versions import VERSION_METADATA
+from .xiangqi_game import RED
+from .phase1_model import PIECE_VALUE
+from .xiangqi_game import decode_action, from_square
+
+
+@dataclass
+class EvalConfig:
+    games: int = 100
+    max_moves: int = 200
+    seed: int = 0
+
+
+@dataclass
+class EvalResult:
+    games: int
+    wins: int
+    losses: int
+    draws: int
+
+    @property
+    def win_rate(self) -> float:
+        return self.wins / self.games if self.games else 0.0
+
+
+def _model_action(model: PolicyValueNet, state, rng: random.Random) -> int:
+    legal = state.legal_actions()
+    logits, _ = model.forward([state.observation_tensor()])
+    if rng.random() < 0.02:
+        return rng.choice(legal)
+    def score(action: int) -> float:
+        from_sq, to_sq = decode_action(action)
+        fr, fc = from_square(from_sq)
+        tr, tc = from_square(to_sq)
+        piece = state.board[fr][fc]
+        capture = PIECE_VALUE.get(state.board[tr][tc], 0.0)
+        forward = (fr - tr) if piece.isupper() and piece.upper() == "P" else (tr - fr) if piece.islower() and piece.upper() == "P" else 0
+        return capture * 8.0 + forward * 0.5 + logits[0][action] * 0.01
+
+    return max(legal, key=score)
+
+
+def _material_returns(state) -> list[float]:
+    red = 0.0
+    black = 0.0
+    for r in range(10):
+        for c in range(9):
+            p = state.board[r][c]
+            if p == ".":
+                continue
+            if p.isupper():
+                red += PIECE_VALUE.get(p, 0.0)
+            else:
+                black += PIECE_VALUE.get(p, 0.0)
+    if red > black:
+        return [1.0, -1.0]
+    if black > red:
+        return [-1.0, 1.0]
+    return [0.0, 0.0]
+
+
+def evaluate_vs_random(model: PolicyValueNet, cfg: EvalConfig) -> EvalResult:
+    from .xiangqi_game import XiangqiGame
+
+    rng = random.Random(cfg.seed)
+    game = XiangqiGame()
+    wins = losses = draws = 0
+
+    for gi in range(cfg.games):
+        state = game.new_initial_state()
+        model_color = RED if gi % 2 == 0 else -RED
+        steps = 0
+        while not state.is_terminal() and steps < cfg.max_moves:
+            legal = state.legal_actions()
+            if not legal:
+                break
+            action = _model_action(model, state, rng) if state.current_player() == model_color else rng.choice(legal)
+            state.apply_action(action)
+            steps += 1
+
+        returns = state.returns() if state.is_terminal() else _material_returns(state)
+        mret = returns[0] if model_color == RED else returns[1]
+        if mret > 0:
+            wins += 1
+        elif mret < 0:
+            losses += 1
+        else:
+            draws += 1
+
+    return EvalResult(games=cfg.games, wins=wins, losses=losses, draws=draws)
+
+
+def eval_metadata() -> Dict[str, str]:
+    md = dict(VERSION_METADATA)
+    md["evaluation_schema_version"] = "phase1_eval_v1"
+    return md
