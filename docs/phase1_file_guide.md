@@ -17,18 +17,27 @@ self-play -> replay -> train -> reload -> evaluate
 - `alphacchess/phase1_selfplay.py`
   - Small-scale self-play loop.
   - Produces replay samples with observation, selected policy action, and value target.
+  - Phase 1.1 adds a controlled terminal-enrichment path (optional, default enabled by training CLI):
+    - game source: `terminal_enrichment`
+    - deterministic near-terminal start positions
+    - explicit non-zero win/loss supervision injection for value head
+  - Also adds immediate-terminal move preference in action selection (without changing overall architecture).
   - Also records per-game termination semantics:
     - `ended_naturally`
     - `hit_step_cap`
     - `terminal_reason`
     - `result_label` (`win` / `loss` / `draw` / `truncated_draw`, red-perspective)
+    - `game_source` (`selfplay` / `terminal_enrichment`)
 
 - `alphacchess/phase1_replay.py`
   - Replay dataset schema and metadata validation.
-  - Replay schema version is now `phase1_replay_v2` (strictly validated).
+  - Replay schema version is now `phase1_replay_v3` (strictly validated).
   - Stores two payloads:
     - `samples`: per-position supervision records
     - `games`: per-game semantic summaries (termination/result metadata)
+  - Phase 1.1 adds explicit source labels:
+    - `ReplaySample.sample_source`
+    - `ReplayGame.game_source`
   - Ensures replay includes version metadata:
     - `action_encoding_version`
     - `observation_encoding_version`
@@ -93,6 +102,8 @@ self-play -> replay -> train -> reload -> evaluate
     - `step_cap_truncations`
     - `result_counts`
     - `terminal_reason_counts`
+    - `game_source_counts`
+    - `value_counts_by_source`
     - `value_non_zero_fraction`
     - `value_positive_count` / `value_zero_count` / `value_negative_count`
 
@@ -100,12 +111,13 @@ self-play -> replay -> train -> reload -> evaluate
 
 - If `step_cap_truncations` is high and `result_counts.truncated_draw` dominates, then replay is truncation-heavy and value targets will mostly be `0`.
 - If `natural_terminations` contains wins/losses, then at least some non-zero value supervision should appear.
+- If non-zero supervision mainly comes from `value_counts_by_source.terminal_enrichment`, this is expected in early Phase 1.1 and should be interpreted as a controlled fallback while baseline self-play is still weak.
 - `value_non_zero_fraction` is the fastest single indicator for whether value learning is seeing terminal supervision beyond draws.
 - `terminal_reason_counts` helps verify whether natural terminal rules are actually being hit (e.g., `black_general_captured`, `no_legal_moves`) or whether the loop mostly exits via `max_moves_truncation`.
 
 ## Schema/version note
 
-- Replay schema extension from `phase1_replay_v1` to `phase1_replay_v2` is intentional.
+- Replay schema extension from `phase1_replay_v2` to `phase1_replay_v3` is intentional for Phase 1.1 source tracking.
 - Strict metadata validation remains enabled; mismatched schema version will fail fast at load time.
 
 ## Artifact layout

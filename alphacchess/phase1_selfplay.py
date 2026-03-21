@@ -16,6 +16,8 @@ class SelfPlayConfig:
     max_moves: int = 200
     exploration_eps: float = 0.20
     policy_temperature: float = 1.0
+    terminal_enrichment_games: int = 0
+    terminal_enrichment_max_moves: int = 6
 
 
 @dataclass
@@ -27,6 +29,8 @@ class SelfPlaySummary:
     draws: int
     natural_terminations: int
     step_cap_truncations: int
+    selfplay_games: int
+    terminal_enrichment_games: int
 
 
 def _masked_policy_probs(logits: List[float], legal_actions: Sequence[int], temperature: float = 1.0) -> List[float]:
@@ -83,15 +87,30 @@ def choose_action(
         tr, tc = from_square(to_sq)
         piece = state.board[fr][fc]
         capture = PIECE_VALUE.get(state.board[tr][tc], 0.0)
-        forward = (fr - tr) if piece.isupper() and piece.upper() == "P" else (tr - fr) if piece.islower() and piece.upper() == "P" else 0
+        forward = (
+            (fr - tr)
+            if piece.isupper() and piece.upper() == "P"
+            else (tr - fr) if piece.islower() and piece.upper() == "P" else 0
+        )
         return capture * 8.0 + forward * 0.5
 
-    if rng.random() < exploration_eps:
-        action = rng.choice(list(legal))
-    else:
-        action = max(legal, key=lambda a: mixed[a] + 0.01 * tactical_score(a))
+    current_player = state.current_player()
 
-    return action
+    def terminal_bonus(action: int) -> float:
+        sim = state.clone()
+        sim.apply_action(action)
+        if not sim.is_terminal():
+            return 0.0
+        returns = sim.returns()
+        value = returns[0] if current_player == RED else returns[1]
+        return 100.0 if value > 0 else 0.0
+
+    if rng.random() < exploration_eps:
+        return rng.choice(list(legal))
+    return max(
+        legal,
+        key=lambda a: mixed[a] + 0.05 * tactical_score(a) + terminal_bonus(a),
+    )
 
 
 def run_selfplay(model: PolicyValueNet, cfg: SelfPlayConfig, seed: int = 0) -> tuple[ReplayDataset, SelfPlaySummary]:
@@ -105,25 +124,32 @@ def run_selfplay(model: PolicyValueNet, cfg: SelfPlayConfig, seed: int = 0) -> t
     red_wins = black_wins = draws = 0
     natural_terminations = step_cap_truncations = 0
 
-    for game_index in range(cfg.games):
-        state = game.new_initial_state()
+    enrichment_starts = [
+        "4k4/9/9/9/9/9/9/9/4R4/4K4 w",
+        "4k4/4r4/9/9/9/9/9/9/9/4K4 b",
+    ]
+
+    def play_one(game_index: int, start_fen: str | None, game_source: str, max_moves: int, exploration_eps: float) -> None:
+        nonlocal red_wins, black_wins, draws, natural_terminations, step_cap_truncations
+        state = XiangqiState.from_fen(start_fen) if start_fen else game.new_initial_state()
         game_positions: List[Dict] = []
         moves = 0
 
-        while not state.is_terminal() and moves < cfg.max_moves:
-            action = choose_action(state, model, rng, cfg.exploration_eps, cfg.policy_temperature)
+        while not state.is_terminal() and moves < max_moves:
+            action = choose_action(state, model, rng, exploration_eps, cfg.policy_temperature)
             game_positions.append(
                 {
                     "obs": state.observation_tensor(),
                     "policy_action": action,
                     "player": state.current_player(),
+                    "sample_source": game_source,
                 }
             )
             state.apply_action(action)
             moves += 1
 
         ended_naturally = state.is_terminal()
-        hit_step_cap = (not ended_naturally) and (moves >= cfg.max_moves)
+        hit_step_cap = (not ended_naturally) and (moves >= max_moves)
         terminal_reason = state.terminal_reason() if ended_naturally else "max_moves_truncation"
         returns = state.returns() if ended_naturally else [0.0, 0.0]
         if ended_naturally:
@@ -152,6 +178,7 @@ def run_selfplay(model: PolicyValueNet, cfg: SelfPlayConfig, seed: int = 0) -> t
                 result_label=result_label,
                 red_return=float(returns[0]),
                 black_return=float(returns[1]),
+                game_source=game_source,
             )
         )
         for p in game_positions:
@@ -164,15 +191,30 @@ def run_selfplay(model: PolicyValueNet, cfg: SelfPlayConfig, seed: int = 0) -> t
                     value_target=float(v),
                     player=player,
                     game_index=game_index,
+                    sample_source=p["sample_source"],
                 )
             )
 
+    for game_index in range(cfg.games):
+        play_one(game_index, None, "selfplay", cfg.max_moves, cfg.exploration_eps)
+
+    for i in range(cfg.terminal_enrichment_games):
+        play_one(
+            cfg.games + i,
+            enrichment_starts[i % len(enrichment_starts)],
+            "terminal_enrichment",
+            cfg.terminal_enrichment_max_moves,
+            exploration_eps=0.0,
+        )
+
     return ReplayDataset(metadata=make_replay_metadata(), samples=all_samples, games=game_summaries), SelfPlaySummary(
-        games=cfg.games,
+        games=cfg.games + cfg.terminal_enrichment_games,
         samples=len(all_samples),
         red_wins=red_wins,
         black_wins=black_wins,
         draws=draws,
         natural_terminations=natural_terminations,
         step_cap_truncations=step_cap_truncations,
+        selfplay_games=cfg.games,
+        terminal_enrichment_games=cfg.terminal_enrichment_games,
     )

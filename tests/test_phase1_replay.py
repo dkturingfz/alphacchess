@@ -82,3 +82,5 @@ def test_replay_summary_distinguishes_terminal_and_truncation():
     assert summary["value_positive_count"] == 1
     assert summary["value_zero_count"] == 1
     assert summary["value_negative_count"] == 1
+    assert summary["game_source_counts"]["selfplay"] == 2
+    assert summary["value_counts_by_source"]["selfplay"]["total"] == 3
