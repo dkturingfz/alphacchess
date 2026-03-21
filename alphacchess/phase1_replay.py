@@ -8,7 +8,7 @@ from typing import Dict, List, Tuple
 from .versions import VERSION_METADATA
 from .xiangqi_game import ACTION_SPACE_SIZE
 
-REPLAY_SCHEMA_VERSION = "phase1_replay_v2"
+REPLAY_SCHEMA_VERSION = "phase1_replay_v3"
 
 
 @dataclass
@@ -18,6 +18,7 @@ class ReplaySample:
     value_target: float
     player: int
     game_index: int
+    sample_source: str = "selfplay"
 
 
 @dataclass
@@ -30,6 +31,7 @@ class ReplayGame:
     result_label: str
     red_return: float
     black_return: float
+    game_source: str = "selfplay"
 
 
 @dataclass
@@ -101,6 +103,7 @@ def summarize_replay(ds: ReplayDataset) -> Dict[str, object]:
         "truncated_draw": 0,
     }
     terminal_reason_counts: Dict[str, int] = {}
+    game_source_counts: Dict[str, int] = {}
     for g in ds.games:
         if g.ended_naturally:
             game_counts["natural_terminations"] += 1
@@ -109,11 +112,24 @@ def summarize_replay(ds: ReplayDataset) -> Dict[str, object]:
         if g.result_label in game_counts:
             game_counts[g.result_label] += 1
         terminal_reason_counts[g.terminal_reason] = terminal_reason_counts.get(g.terminal_reason, 0) + 1
+        game_source_counts[g.game_source] = game_source_counts.get(g.game_source, 0) + 1
 
     pos_count = sum(1 for x in val if x > 0)
     zero_count = sum(1 for x in val if x == 0)
     neg_count = sum(1 for x in val if x < 0)
     non_zero_count = len(val) - zero_count
+    source_value_counts: Dict[str, Dict[str, int]] = {}
+    for sample in ds.samples:
+        bucket = source_value_counts.setdefault(
+            sample.sample_source, {"positive": 0, "zero": 0, "negative": 0, "total": 0}
+        )
+        bucket["total"] += 1
+        if sample.value_target > 0:
+            bucket["positive"] += 1
+        elif sample.value_target < 0:
+            bucket["negative"] += 1
+        else:
+            bucket["zero"] += 1
 
     return {
         "metadata": ds.metadata,
@@ -138,4 +154,6 @@ def summarize_replay(ds: ReplayDataset) -> Dict[str, object]:
             "truncated_draw": game_counts["truncated_draw"],
         },
         "terminal_reason_counts": terminal_reason_counts,
+        "game_source_counts": game_source_counts,
+        "value_counts_by_source": source_value_counts,
     }

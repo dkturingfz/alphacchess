@@ -22,6 +22,8 @@ def main() -> int:
     ap.add_argument("--iterations", type=int, default=4)
     ap.add_argument("--games-per-iter", type=int, default=30)
     ap.add_argument("--max-moves", type=int, default=80)
+    ap.add_argument("--terminal-enrichment-games", type=int, default=6)
+    ap.add_argument("--terminal-enrichment-max-moves", type=int, default=6)
     ap.add_argument("--epochs", type=int, default=3)
     ap.add_argument("--batch-size", type=int, default=128)
     ap.add_argument("--lr", type=float, default=1e-3)
@@ -42,7 +44,12 @@ def main() -> int:
     for it in range(args.iterations):
         ds, sp = run_selfplay(
             model,
-            SelfPlayConfig(games=args.games_per_iter, max_moves=args.max_moves),
+            SelfPlayConfig(
+                games=args.games_per_iter,
+                max_moves=args.max_moves,
+                terminal_enrichment_games=args.terminal_enrichment_games,
+                terminal_enrichment_max_moves=args.terminal_enrichment_max_moves,
+            ),
             seed=args.seed + it,
         )
         replay_path = replay_dir / f"iter_{it:03d}.json"
@@ -66,8 +73,10 @@ def main() -> int:
                 "iteration": it,
                 "replay_path": str(replay_path),
                 "checkpoint": str(ckpt_path),
-                "selfplay_games": sp.games,
+                "total_games": sp.games,
                 "samples": sp.samples,
+                "selfplay_games": sp.selfplay_games,
+                "terminal_enrichment_games": sp.terminal_enrichment_games,
                 "natural_terminations": sp.natural_terminations,
                 "step_cap_truncations": sp.step_cap_truncations,
                 "train_steps": ts.steps,

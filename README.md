@@ -159,6 +159,24 @@ Phase 1 现已显式记录并导出每盘自对弈的结束语义（不是只看
 1. **正确但监督退化**：回放几乎全是 `truncated_draw`，则 value=0 主要由截断设计导致。  
 2. **实现 bug**：如果有自然胜负终局，但 value 分布仍全零，则应优先排查 returns 传播链路（当前已加回归测试保护）。
 
+### Phase 1.1：value 监督去退化（terminal-enrichment + 统计增强）
+
+为解决“自对弈几乎都在 `max_moves` 截断，导致 value target 接近全 0”的问题，Phase 1.1 做了一个**小而明确**的改进：
+
+1. 自对弈动作选择加入“立即终局优先”（若一步可直接获胜，优先选择）。
+2. 在不替代主路径的前提下，加入可控的 `terminal_enrichment` 对局源：
+   - 使用固定、合法、可复现的近终局 FEN 起点；
+   - 只用于补充少量明确胜负标签，保证 value head 可见非零监督；
+   - 默认与常规 self-play 同时写入同一 replay，但在 schema 中显式区分来源。
+3. replay 统计新增来源维度：
+   - `game_source_counts`
+   - `value_counts_by_source`
+
+因此可以明确回答：
+- 非零 value supervision 是否存在；
+- 它主要来自自然终局 self-play 还是来自受控 terminal-enrichment；
+- 是否仍被截断局主导。
+
 ---
 
 ## 仓库结构说明

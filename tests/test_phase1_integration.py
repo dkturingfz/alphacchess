@@ -7,7 +7,11 @@ from alphacchess.phase1_train import TrainConfig, train_on_replay
 
 def test_one_iteration_selfplay_train_reload_evaluate(tmp_path):
     model = PolicyValueNet.for_xiangqi_v1(seed=3)
-    replay, summary = run_selfplay(model, SelfPlayConfig(games=4, max_moves=80), seed=3)
+    replay, summary = run_selfplay(
+        model,
+        SelfPlayConfig(games=4, max_moves=80, terminal_enrichment_games=2, terminal_enrichment_max_moves=4),
+        seed=3,
+    )
     assert summary.samples > 0
     assert summary.natural_terminations + summary.step_cap_truncations == summary.games
     assert len(replay.games) == summary.games
@@ -16,6 +20,7 @@ def test_one_iteration_selfplay_train_reload_evaluate(tmp_path):
     replay.save(replay_path)
     replay2 = ReplayDataset.load(replay_path)
     obs, pol, val = replay2.as_arrays()
+    assert any(v != 0.0 for v in val)
 
     assert (len(obs[0]), len(obs[0][0]), len(obs[0][0][0])) == (15, 10, 9)
     assert len(pol[0]) == 8100
