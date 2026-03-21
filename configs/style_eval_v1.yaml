@@ -1,0 +1,29 @@
+style_eval_name: style_eval_v1
+
+phase_split:
+  opening:
+    ply_start: 1
+    ply_end: 20
+  middlegame:
+    ply_start: 21
+    ply_end: 60
+  endgame:
+    ply_start: 61
+    ply_end: null
+
+metrics:
+  - top1
+  - top3
+
+top1_thresholds:
+  unusable_lt: 25.0
+  gray_zone_gte: 25.0
+  gray_zone_lt: 35.0
+  usable_gte: 35.0
+  preferred_gte: 40.0
+
+gray_zone_recovery:
+  verify_data_pipeline: true
+  strengthen_generic_pretrain_then_personal_finetune: true
+  enable_left_right_mirror_augmentation: true
+  allow_increase_model_capacity_after_other_steps: true
