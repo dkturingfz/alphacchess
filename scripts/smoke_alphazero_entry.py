@@ -17,7 +17,10 @@ def main() -> int:
         json.dumps(
             {
                 "steps": out.steps,
+                "step_limit": out.step_limit,
                 "terminal": out.terminal,
+                "terminated_by": out.terminated_by,
+                "terminal_reason": out.terminal_reason,
                 "returns": out.returns,
                 "metadata": out.metadata,
             },
