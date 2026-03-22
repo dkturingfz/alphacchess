@@ -124,7 +124,7 @@ def main() -> int:
     )
     ap.add_argument(
         "--checkpoint",
-        required=True,
+        default="",
         help="Candidate checkpoint JSON. Required even in --dry-run to record checkpoint metadata.",
     )
     ap.add_argument(
@@ -153,11 +153,15 @@ def main() -> int:
     cfg = load_benchmark_config(cfg_path)
     _validate_config(cfg)
 
+    if not args.checkpoint:
+        raise SystemExit(
+            "Missing --checkpoint. Dry-run still requires a real checkpoint so checkpoint metadata/checkpoint_id can be captured."
+        )
     candidate_path = Path(args.checkpoint)
     if not candidate_path.exists():
         raise SystemExit(
             f"Checkpoint not found: {candidate_path}. "
-            "Dry-run still requires a real checkpoint file to capture checkpoint metadata."
+            "Dry-run still requires a real checkpoint file to capture checkpoint metadata/checkpoint_id."
         )
     _, candidate_meta = PolicyValueNet.load_checkpoint(candidate_path)
 

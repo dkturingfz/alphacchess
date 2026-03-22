@@ -20,7 +20,7 @@ from alphacchess.style_phase1b import (
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="Evaluate style reference model (Phase 1b)")
+    ap = argparse.ArgumentParser(description="Evaluate style reference model (Phase 4 style-reference)")
     ap.add_argument("--checkpoint", required=True)
     ap.add_argument("--dataset", required=True)
     ap.add_argument("--config", default="configs/style_eval_v1.yaml")

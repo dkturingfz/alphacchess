@@ -78,7 +78,7 @@ Goal:
 - add loss-level KL regularization against `pi_style`
 - explore the strength/style tradeoff with structured beta search
 
-See: `plans/See: `plans/phase5_kl_style_rl.md`.md`
+See: `plans/phase5_kl_style_rl.md`
 
 ### 9. Phase 6 — Search-Level Style Guidance (Optional)
 Goal:

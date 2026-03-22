@@ -1,12 +1,14 @@
-# Phase 1b File Guide
+# Phase 4 Style Reference File Guide
 
 ## 目标
 
-Phase 1b 的目标是训练并冻结风格参考策略 `pi_style`，用于后续 style-constrained RL 的风格走廊约束。
+当前计划编号下，Phase 4（历史实现名 Phase 1b）的目标是训练并冻结风格参考策略 `pi_style`，用于后续 style-constrained RL 的风格走廊约束。
 
-> 注意：Phase 1b 只做风格参考模型，不做 KL 约束强化学习本体。
+> 注意：当前计划编号中这是 **Phase 4**，只做风格参考模型，不做 KL 约束强化学习本体。
 
-## 当前状态说明（2026-03-21）
+## 当前状态说明（2026-03-22）
+
+当前阶段（以 `PLAN.md` 为准）：style 流水线对应的是 **Phase 4/5/6**，当前属于“保留但延后”。
 
 - 风格流水线（训练/评测/恢复）已在仓库中实现。
 - 当前 demo 规模 style checkpoint 质量不足，按协议仍不可直接用于后续 style-constrained RL 主线推进。
@@ -74,7 +76,7 @@ Phase 1b 的目标是训练并冻结风格参考策略 `pi_style`，用于后续
 
 - `top-1 < 25%` => **unusable**（不可用）
 - `25% <= top-1 < 35%` => **gray**（灰区，必须恢复）
-- `top-1 >= 35%` => **usable**（可进入 Phase 2a）
+- `top-1 >= 35%` => **usable**（可进入 Phase 5）
 - `top-1 >= 40%` => **preferred**（优选风格参考）
 
 ---
