@@ -16,7 +16,7 @@ def _run(cmd: list[str]) -> dict:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="Run Phase 1b gray-zone style recovery workflow")
+    ap = argparse.ArgumentParser(description="Run Phase 4 style-reference gray-zone style recovery workflow")
     ap.add_argument("--checkpoint", required=True)
     ap.add_argument("--target-dataset", required=True)
     ap.add_argument("--config", default="configs/style_eval_v1.yaml")

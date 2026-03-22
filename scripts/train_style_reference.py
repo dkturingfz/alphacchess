@@ -19,7 +19,7 @@ from alphacchess.style_phase1b import (
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="Train frozen style reference policy (Phase 1b)")
+    ap = argparse.ArgumentParser(description="Train frozen style reference policy (Phase 4 style-reference)")
     ap.add_argument("--target-dataset", required=True, help="JSONL target-player positions or games")
     ap.add_argument("--generic-pretrain-dataset", default="", help="Optional JSONL generic data")
     ap.add_argument("--epochs", type=int, default=2)
