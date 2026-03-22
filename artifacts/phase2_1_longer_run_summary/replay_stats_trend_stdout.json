@@ -1,0 +1,246 @@
+[
+  {
+    "replay": "artifacts/phase2_1_longer_run/replays/iter_000.json",
+    "metadata": {
+      "action_encoding_version": "v1_8100_from_to",
+      "observation_encoding_version": "v1_15planes",
+      "dataset_schema_version": "v1",
+      "rules_version": "v1_python_rules",
+      "replay_schema_version": "phase1_replay_v3"
+    },
+    "num_samples": 1667,
+    "observation_shape": [
+      15,
+      10,
+      9
+    ],
+    "policy_shape": [
+      1667,
+      8100
+    ],
+    "value_mean": 0.007798440311937612,
+    "value_min": -1.0,
+    "value_max": 1.0,
+    "value_positive_count": 360,
+    "value_zero_count": 960,
+    "value_negative_count": 347,
+    "value_non_zero_fraction": 0.4241151769646071,
+    "distinct_actions_in_targets": 493,
+    "num_games": 30,
+    "natural_terminations": 18,
+    "step_cap_truncations": 12,
+    "result_counts": {
+      "win": 10,
+      "loss": 8,
+      "draw": 0,
+      "truncated_draw": 12
+    },
+    "terminal_reason_counts": {
+      "no_legal_moves": 12,
+      "max_moves_truncation": 12,
+      "black_general_captured": 3,
+      "red_general_captured": 3
+    },
+    "game_source_counts": {
+      "selfplay": 24,
+      "terminal_enrichment": 6
+    },
+    "value_counts_by_source": {
+      "selfplay": {
+        "positive": 354,
+        "zero": 960,
+        "negative": 347,
+        "total": 1661
+      },
+      "terminal_enrichment": {
+        "positive": 6,
+        "zero": 0,
+        "negative": 0,
+        "total": 6
+      }
+    }
+  },
+  {
+    "replay": "artifacts/phase2_1_longer_run/replays/iter_001.json",
+    "metadata": {
+      "action_encoding_version": "v1_8100_from_to",
+      "observation_encoding_version": "v1_15planes",
+      "dataset_schema_version": "v1",
+      "rules_version": "v1_python_rules",
+      "replay_schema_version": "phase1_replay_v3"
+    },
+    "num_samples": 1715,
+    "observation_shape": [
+      15,
+      10,
+      9
+    ],
+    "policy_shape": [
+      1715,
+      8100
+    ],
+    "value_mean": 0.004081632653061225,
+    "value_min": -1.0,
+    "value_max": 1.0,
+    "value_positive_count": 181,
+    "value_zero_count": 1360,
+    "value_negative_count": 174,
+    "value_non_zero_fraction": 0.20699708454810495,
+    "distinct_actions_in_targets": 375,
+    "num_games": 30,
+    "natural_terminations": 13,
+    "step_cap_truncations": 17,
+    "result_counts": {
+      "win": 4,
+      "loss": 9,
+      "draw": 0,
+      "truncated_draw": 17
+    },
+    "terminal_reason_counts": {
+      "max_moves_truncation": 17,
+      "no_legal_moves": 7,
+      "black_general_captured": 3,
+      "red_general_captured": 3
+    },
+    "game_source_counts": {
+      "selfplay": 24,
+      "terminal_enrichment": 6
+    },
+    "value_counts_by_source": {
+      "selfplay": {
+        "positive": 175,
+        "zero": 1360,
+        "negative": 174,
+        "total": 1709
+      },
+      "terminal_enrichment": {
+        "positive": 6,
+        "zero": 0,
+        "negative": 0,
+        "total": 6
+      }
+    }
+  },
+  {
+    "replay": "artifacts/phase2_1_longer_run/replays/iter_002.json",
+    "metadata": {
+      "action_encoding_version": "v1_8100_from_to",
+      "observation_encoding_version": "v1_15planes",
+      "dataset_schema_version": "v1",
+      "rules_version": "v1_python_rules",
+      "replay_schema_version": "phase1_replay_v3"
+    },
+    "num_samples": 1872,
+    "observation_shape": [
+      15,
+      10,
+      9
+    ],
+    "policy_shape": [
+      1872,
+      8100
+    ],
+    "value_mean": 0.003205128205128205,
+    "value_min": -1.0,
+    "value_max": 1.0,
+    "value_positive_count": 99,
+    "value_zero_count": 1680,
+    "value_negative_count": 93,
+    "value_non_zero_fraction": 0.10256410256410256,
+    "distinct_actions_in_targets": 381,
+    "num_games": 30,
+    "natural_terminations": 9,
+    "step_cap_truncations": 21,
+    "result_counts": {
+      "win": 3,
+      "loss": 6,
+      "draw": 0,
+      "truncated_draw": 21
+    },
+    "terminal_reason_counts": {
+      "max_moves_truncation": 21,
+      "no_legal_moves": 3,
+      "black_general_captured": 3,
+      "red_general_captured": 3
+    },
+    "game_source_counts": {
+      "selfplay": 24,
+      "terminal_enrichment": 6
+    },
+    "value_counts_by_source": {
+      "selfplay": {
+        "positive": 93,
+        "zero": 1680,
+        "negative": 93,
+        "total": 1866
+      },
+      "terminal_enrichment": {
+        "positive": 6,
+        "zero": 0,
+        "negative": 0,
+        "total": 6
+      }
+    }
+  },
+  {
+    "replay": "artifacts/phase2_1_longer_run/replays/iter_003.json",
+    "metadata": {
+      "action_encoding_version": "v1_8100_from_to",
+      "observation_encoding_version": "v1_15planes",
+      "dataset_schema_version": "v1",
+      "rules_version": "v1_python_rules",
+      "replay_schema_version": "phase1_replay_v3"
+    },
+    "num_samples": 1849,
+    "observation_shape": [
+      15,
+      10,
+      9
+    ],
+    "policy_shape": [
+      1849,
+      8100
+    ],
+    "value_mean": 0.0037858301784748512,
+    "value_min": -1.0,
+    "value_max": 1.0,
+    "value_positive_count": 88,
+    "value_zero_count": 1680,
+    "value_negative_count": 81,
+    "value_non_zero_fraction": 0.0914007571660357,
+    "distinct_actions_in_targets": 358,
+    "num_games": 30,
+    "natural_terminations": 9,
+    "step_cap_truncations": 21,
+    "result_counts": {
+      "win": 4,
+      "loss": 5,
+      "draw": 0,
+      "truncated_draw": 21
+    },
+    "terminal_reason_counts": {
+      "max_moves_truncation": 21,
+      "no_legal_moves": 3,
+      "black_general_captured": 3,
+      "red_general_captured": 3
+    },
+    "game_source_counts": {
+      "selfplay": 24,
+      "terminal_enrichment": 6
+    },
+    "value_counts_by_source": {
+      "selfplay": {
+        "positive": 82,
+        "zero": 1680,
+        "negative": 81,
+        "total": 1843
+      },
+      "terminal_enrichment": {
+        "positive": 6,
+        "zero": 0,
+        "negative": 0,
+        "total": 6
+      }
+    }
+  }
+]
