@@ -1,0 +1,33 @@
+{
+  "metadata": {
+    "action_encoding_version": "v1_8100_from_to",
+    "observation_encoding_version": "v1_15planes",
+    "dataset_schema_version": "v1",
+    "rules_version": "v1_python_rules",
+    "evaluation_schema_version": "phase1_eval_v1"
+  },
+  "evaluation_type": "checkpoint_vs_checkpoint",
+  "candidate_checkpoint": "artifacts/phase2_1_longer_run/checkpoints/iter_003.json",
+  "baseline_checkpoint": "artifacts/phase2_1_longer_run/checkpoints/iter_000.json",
+  "candidate_checkpoint_metadata": {
+    "action_encoding_version": "v1_8100_from_to",
+    "observation_encoding_version": "v1_15planes",
+    "dataset_schema_version": "v1",
+    "rules_version": "v1_python_rules",
+    "checkpoint_schema_version": "phase1_checkpoint_v1",
+    "iteration": "3"
+  },
+  "baseline_checkpoint_metadata": {
+    "action_encoding_version": "v1_8100_from_to",
+    "observation_encoding_version": "v1_15planes",
+    "dataset_schema_version": "v1",
+    "rules_version": "v1_python_rules",
+    "checkpoint_schema_version": "phase1_checkpoint_v1",
+    "iteration": "0"
+  },
+  "games": 16,
+  "candidate_wins": 13,
+  "baseline_wins": 3,
+  "draws": 0,
+  "candidate_score": 0.8125
+}

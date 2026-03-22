@@ -1,0 +1,101 @@
+[
+  {
+    "metadata": {
+      "action_encoding_version": "v1_8100_from_to",
+      "observation_encoding_version": "v1_15planes",
+      "dataset_schema_version": "v1",
+      "rules_version": "v1_python_rules",
+      "evaluation_schema_version": "phase1_eval_v1"
+    },
+    "evaluation_type": "checkpoint_vs_checkpoint",
+    "candidate_checkpoint": "artifacts/phase2_1_longer_run/checkpoints/iter_001.json",
+    "baseline_checkpoint": "artifacts/phase2_1_longer_run/checkpoints/iter_000.json",
+    "candidate_checkpoint_metadata": {
+      "action_encoding_version": "v1_8100_from_to",
+      "observation_encoding_version": "v1_15planes",
+      "dataset_schema_version": "v1",
+      "rules_version": "v1_python_rules",
+      "checkpoint_schema_version": "phase1_checkpoint_v1",
+      "iteration": "1"
+    },
+    "baseline_checkpoint_metadata": {
+      "action_encoding_version": "v1_8100_from_to",
+      "observation_encoding_version": "v1_15planes",
+      "dataset_schema_version": "v1",
+      "rules_version": "v1_python_rules",
+      "checkpoint_schema_version": "phase1_checkpoint_v1",
+      "iteration": "0"
+    },
+    "games": 12,
+    "candidate_wins": 11,
+    "baseline_wins": 1,
+    "draws": 0,
+    "candidate_score": 0.9166666666666666
+  },
+  {
+    "metadata": {
+      "action_encoding_version": "v1_8100_from_to",
+      "observation_encoding_version": "v1_15planes",
+      "dataset_schema_version": "v1",
+      "rules_version": "v1_python_rules",
+      "evaluation_schema_version": "phase1_eval_v1"
+    },
+    "evaluation_type": "checkpoint_vs_checkpoint",
+    "candidate_checkpoint": "artifacts/phase2_1_longer_run/checkpoints/iter_002.json",
+    "baseline_checkpoint": "artifacts/phase2_1_longer_run/checkpoints/iter_001.json",
+    "candidate_checkpoint_metadata": {
+      "action_encoding_version": "v1_8100_from_to",
+      "observation_encoding_version": "v1_15planes",
+      "dataset_schema_version": "v1",
+      "rules_version": "v1_python_rules",
+      "checkpoint_schema_version": "phase1_checkpoint_v1",
+      "iteration": "2"
+    },
+    "baseline_checkpoint_metadata": {
+      "action_encoding_version": "v1_8100_from_to",
+      "observation_encoding_version": "v1_15planes",
+      "dataset_schema_version": "v1",
+      "rules_version": "v1_python_rules",
+      "checkpoint_schema_version": "phase1_checkpoint_v1",
+      "iteration": "1"
+    },
+    "games": 12,
+    "candidate_wins": 4,
+    "baseline_wins": 7,
+    "draws": 1,
+    "candidate_score": 0.375
+  },
+  {
+    "metadata": {
+      "action_encoding_version": "v1_8100_from_to",
+      "observation_encoding_version": "v1_15planes",
+      "dataset_schema_version": "v1",
+      "rules_version": "v1_python_rules",
+      "evaluation_schema_version": "phase1_eval_v1"
+    },
+    "evaluation_type": "checkpoint_vs_checkpoint",
+    "candidate_checkpoint": "artifacts/phase2_1_longer_run/checkpoints/iter_003.json",
+    "baseline_checkpoint": "artifacts/phase2_1_longer_run/checkpoints/iter_002.json",
+    "candidate_checkpoint_metadata": {
+      "action_encoding_version": "v1_8100_from_to",
+      "observation_encoding_version": "v1_15planes",
+      "dataset_schema_version": "v1",
+      "rules_version": "v1_python_rules",
+      "checkpoint_schema_version": "phase1_checkpoint_v1",
+      "iteration": "3"
+    },
+    "baseline_checkpoint_metadata": {
+      "action_encoding_version": "v1_8100_from_to",
+      "observation_encoding_version": "v1_15planes",
+      "dataset_schema_version": "v1",
+      "rules_version": "v1_python_rules",
+      "checkpoint_schema_version": "phase1_checkpoint_v1",
+      "iteration": "2"
+    },
+    "games": 12,
+    "candidate_wins": 7,
+    "baseline_wins": 4,
+    "draws": 1,
+    "candidate_score": 0.625
+  }
+]
