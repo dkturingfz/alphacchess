@@ -40,6 +40,7 @@
 - Phase 2 / 2.1 文件导览：`docs/phase2_file_guide.md`
 - Phase 3 文件导览：`docs/phase3_file_guide.md`
 - benchmark 协议：`docs/benchmark_protocol.md`
+- FEN 样本资产说明：`docs/fen_sample_assets.md`
 - style eval 协议：`docs/style_eval_protocol.md`
 - style 流水线导览（当前延后）：`docs/phase1b_file_guide.md`
 
@@ -70,5 +71,7 @@ python scripts/evaluate_vs_pikafish.py \
 
 - PGNS/PGN-like -> FEN 位置抽取脚本：`scripts/build_test_positions_from_games.py`
 - FEN 位置校验脚本：`scripts/validate_test_positions.py`
+- FEN 样本集策展脚本：`scripts/curate_fen_samples.py`
+- 一键校验所有跟踪样本：`scripts/validate_fen_samples.py`
 
 这两个脚本用于**本地**数据准备与检查。完整大规模转换应输出到本地/制品目录（artifact-only），不应将大体量生成数据提交到 git。
