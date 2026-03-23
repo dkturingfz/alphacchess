@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import random
-from typing import Dict
+from typing import Dict, Sequence
 
 from .phase1_model import PolicyValueNet
 from .versions import VERSION_METADATA
@@ -145,6 +145,57 @@ def evaluate_model_vs_model(
 
     return CheckpointMatchResult(
         games=cfg.games,
+        candidate_wins=candidate_wins,
+        baseline_wins=baseline_wins,
+        draws=draws,
+    )
+
+
+def evaluate_model_vs_model_on_start_fens(
+    candidate_model: PolicyValueNet,
+    baseline_model: PolicyValueNet,
+    *,
+    start_fens: Sequence[str],
+    games_per_start: int,
+    max_moves: int,
+    seed: int = 0,
+) -> CheckpointMatchResult:
+    from .xiangqi_game import XiangqiState
+
+    if not start_fens:
+        raise ValueError("start_fens must be non-empty")
+    if games_per_start <= 0:
+        raise ValueError("games_per_start must be >= 1")
+
+    rng = random.Random(seed)
+    candidate_wins = baseline_wins = draws = 0
+    total_games = len(start_fens) * games_per_start
+
+    for fen in start_fens:
+        for round_index in range(games_per_start):
+            state = XiangqiState.from_fen(fen)
+            candidate_color = RED if round_index % 2 == 0 else -RED
+            steps = 0
+            while not state.is_terminal() and steps < max_moves:
+                legal = state.legal_actions()
+                if not legal:
+                    break
+                model = candidate_model if state.current_player() == candidate_color else baseline_model
+                action = _model_action(model, state, rng)
+                state.apply_action(action)
+                steps += 1
+
+            returns = state.returns() if state.is_terminal() else _material_returns(state)
+            candidate_ret = returns[0] if candidate_color == RED else returns[1]
+            if candidate_ret > 0:
+                candidate_wins += 1
+            elif candidate_ret < 0:
+                baseline_wins += 1
+            else:
+                draws += 1
+
+    return CheckpointMatchResult(
+        games=total_games,
         candidate_wins=candidate_wins,
         baseline_wins=baseline_wins,
         draws=draws,

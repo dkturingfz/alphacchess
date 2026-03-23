@@ -47,6 +47,14 @@ For a one-command workflow check (validator + pytest module):
 python scripts/check_fen_assets.py
 ```
 
+Top-level unified entry (CI-friendly):
+
+```bash
+make validate
+```
+
+`make validate` currently routes to `scripts/check_fen_assets.py`.
+
 ## Benchmark-start sample purpose
 
 `data/benchmark_positions/samples/benchmark_start_fens_sample.txt` is a **small exploratory pool** for:
@@ -58,6 +66,19 @@ To keep this file useful and not trivially repetitive, it intentionally includes
 - a few curated early-game starts from the tracked opening sample assets
 
 It is **not** the final official benchmark suite.
+
+For a small internal checkpoint sanity pass on this pool (no external engine runtime):
+
+```bash
+python scripts/run_benchmark_start_sanity.py \
+  --candidate <candidate_checkpoint.json> \
+  --baseline <baseline_checkpoint.json> \
+  --max-start-positions 5 \
+  --games-per-start 2 \
+  --seeds 17,29
+```
+
+This script is exploratory sanity evidence only and must **not** be treated as a final benchmark-strength claim.
 
 ## Git vs local-only boundary
 
