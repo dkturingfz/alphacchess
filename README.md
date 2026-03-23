@@ -65,6 +65,14 @@ python scripts/evaluate_vs_pikafish.py \
   --dry-run
 ```
 
+## 顶层验证入口（CI-friendly）
+
+```bash
+make validate
+```
+
+当前 `make validate` 会调用 `python scripts/check_fen_assets.py`，用于统一执行跟踪 FEN 样本资产的校验工作流（`validate_fen_samples` + `tests/test_fen_sample_assets.py`）。
+
 
 
 ## 本地数据转换（仓库安全）
@@ -74,5 +82,6 @@ python scripts/evaluate_vs_pikafish.py \
 - FEN 样本集策展脚本：`scripts/curate_fen_samples.py`
 - 一键校验所有跟踪样本：`scripts/validate_fen_samples.py`
 - FEN 样本工作流一键检查（校验 + pytest）：`scripts/check_fen_assets.py`
+- benchmark_start 小规模 checkpoint sanity：`scripts/run_benchmark_start_sanity.py`
 
 这两个脚本用于**本地**数据准备与检查。完整大规模转换应输出到本地/制品目录（artifact-only），不应将大体量生成数据提交到 git。
