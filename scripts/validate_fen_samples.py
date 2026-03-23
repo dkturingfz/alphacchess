@@ -65,25 +65,48 @@ def _validate_file(path: Path, near_terminal_limit: int, enforce_near_terminal: 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Validate all tracked curated FEN sample sets")
     parser.add_argument("--near-terminal-legal-limit", type=int, default=4)
+    parser.add_argument(
+        "--benchmark-start-min-unique",
+        type=int,
+        default=4,
+        help="Require at least this many unique benchmark-start FENs",
+    )
     args = parser.parse_args()
 
     summary: dict[str, object] = {}
     failed = False
+    benchmark_unique = 0
 
     for name, rel_path in DEFAULT_SAMPLE_FILES.items():
         path = ROOT / rel_path
+        fens = _iter_fens(path)
         result = _validate_file(
             path=path,
             near_terminal_limit=args.near_terminal_legal_limit,
             enforce_near_terminal=(name == "near_terminal"),
         )
+        if name == "benchmark_start":
+            benchmark_unique = len(set(fens))
         summary[name] = {"path": str(rel_path), **result}
         if result["status"] != "ok":
             failed = True
+    if benchmark_unique < args.benchmark_start_min_unique:
+        failed = True
+        benchmark_set = summary["benchmark_start"]
+        assert isinstance(benchmark_set, dict)
+        benchmark_set["benchmark_start_min_unique_required"] = args.benchmark_start_min_unique
+        benchmark_set["benchmark_start_unique_fens"] = benchmark_unique
+        benchmark_set["status"] = "failed"
+    else:
+        benchmark_set = summary["benchmark_start"]
+        assert isinstance(benchmark_set, dict)
+        benchmark_set["benchmark_start_min_unique_required"] = args.benchmark_start_min_unique
+        benchmark_set["benchmark_start_unique_fens"] = benchmark_unique
 
     payload = {
         "status": "ok" if not failed else "failed",
         "near_terminal_legal_limit": args.near_terminal_legal_limit,
+        "benchmark_start_min_unique": args.benchmark_start_min_unique,
         "sets": summary,
     }
     print(json.dumps(payload, indent=2, ensure_ascii=False))
