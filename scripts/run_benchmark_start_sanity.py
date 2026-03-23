@@ -57,7 +57,14 @@ def _parse_seeds(raw: str) -> list[int]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Checkpoint sanity check from benchmark_start FEN pool")
+    parser = argparse.ArgumentParser(
+        description="Checkpoint sanity check from benchmark_start FEN pool",
+        epilog=(
+            "PowerShell note: --candidate/--baseline must point to existing checkpoint files. "
+            "Generate checkpoints first (for example via scripts/train_selfplay.py) and verify "
+            "with Test-Path before running this command."
+        ),
+    )
     parser.add_argument("--candidate", required=True)
     parser.add_argument("--baseline", required=True)
     parser.add_argument(
