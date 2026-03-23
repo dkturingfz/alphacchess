@@ -80,6 +80,53 @@ python scripts/run_benchmark_start_sanity.py \
 
 This script is exploratory sanity evidence only and must **not** be treated as a final benchmark-strength claim.
 
+## Trustworthy local rerun recipe (checkpoint source + sanity check)
+
+If a prior note references a checkpoint path that is not present locally (for example `artifacts/benchmark_start_unattended_2026-03-23/...` on a fresh clone), do **not** reuse that path directly.
+First generate a small local training run, then run sanity check against the generated checkpoints.
+
+Verified minimal sequence (PowerShell-safe quoting shown where useful):
+
+```powershell
+python scripts/train_selfplay.py `
+  --iterations 3 `
+  --games-per-iter 4 `
+  --max-moves 40 `
+  --terminal-enrichment-games 2 `
+  --terminal-enrichment-max-moves 6 `
+  --epochs 1 `
+  --batch-size 64 `
+  --quick-eval-games 4 `
+  --checkpoint-eval-games 4 `
+  --checkpoint-eval-max-moves 60 `
+  --seed 123 `
+  --out-dir artifacts/local_benchmark_start_repair_2026-03-23/train_small
+```
+
+Expected checkpoint outputs:
+
+- `artifacts/local_benchmark_start_repair_2026-03-23/train_small/checkpoints/iter_000.json`
+- `artifacts/local_benchmark_start_repair_2026-03-23/train_small/checkpoints/iter_001.json`
+- `artifacts/local_benchmark_start_repair_2026-03-23/train_small/checkpoints/iter_002.json`
+
+Then run benchmark_start sanity check on real local files:
+
+```powershell
+python scripts/run_benchmark_start_sanity.py `
+  --candidate artifacts/local_benchmark_start_repair_2026-03-23/train_small/checkpoints/iter_002.json `
+  --baseline artifacts/local_benchmark_start_repair_2026-03-23/train_small/checkpoints/iter_000.json `
+  --start-fens data/benchmark_positions/samples/benchmark_start_fens_sample.txt `
+  --max-start-positions 4 `
+  --games-per-start 2 `
+  --max-moves 60 `
+  --seeds "17,29" `
+  --out artifacts/local_benchmark_start_repair_2026-03-23/benchmark_start_sanity/iter002_vs_iter000.json
+```
+
+Expected sanity output:
+
+- `artifacts/local_benchmark_start_repair_2026-03-23/benchmark_start_sanity/iter002_vs_iter000.json`
+
 ## Reproducible benchmark_start refresh (local converted corpus -> tracked sample)
 
 Use the local converted corpus JSONL as deterministic input and keep large candidate pools local-only:
