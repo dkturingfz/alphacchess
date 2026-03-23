@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+from statistics import mean, pstdev
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -37,7 +38,7 @@ def _parse_seeds(raw: str) -> list[int]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Small checkpoint sanity check from benchmark_start FEN pool")
+    parser = argparse.ArgumentParser(description="Checkpoint sanity check from benchmark_start FEN pool")
     parser.add_argument("--candidate", required=True)
     parser.add_argument("--baseline", required=True)
     parser.add_argument(
@@ -45,10 +46,10 @@ def main() -> int:
         default="data/benchmark_positions/samples/benchmark_start_fens_sample.txt",
         help="Path to benchmark_start-style FEN text file",
     )
-    parser.add_argument("--max-start-positions", type=int, default=5)
-    parser.add_argument("--games-per-start", type=int, default=2)
+    parser.add_argument("--max-start-positions", type=int, default=8)
+    parser.add_argument("--games-per-start", type=int, default=4)
     parser.add_argument("--max-moves", type=int, default=120)
-    parser.add_argument("--seeds", default="17,29")
+    parser.add_argument("--seeds", default="17,29,41,53")
     parser.add_argument("--out", default="")
     args = parser.parse_args()
 
@@ -84,6 +85,9 @@ def main() -> int:
     total_candidate_wins = sum(item["candidate_wins"] for item in per_seed)
     total_baseline_wins = sum(item["baseline_wins"] for item in per_seed)
     total_draws = sum(item["draws"] for item in per_seed)
+    per_seed_scores = [float(item["candidate_score"]) for item in per_seed]
+    score_mean = mean(per_seed_scores) if per_seed_scores else 0.0
+    score_stddev = pstdev(per_seed_scores) if len(per_seed_scores) > 1 else 0.0
 
     payload = {
         "metadata": eval_metadata(),
@@ -104,6 +108,10 @@ def main() -> int:
             "baseline_wins": total_baseline_wins,
             "draws": total_draws,
             "candidate_score": ((total_candidate_wins + 0.5 * total_draws) / total_games) if total_games else 0.0,
+            "candidate_score_mean_across_seeds": score_mean,
+            "candidate_score_stddev_across_seeds": score_stddev,
+            "candidate_score_min_across_seeds": min(per_seed_scores) if per_seed_scores else 0.0,
+            "candidate_score_max_across_seeds": max(per_seed_scores) if per_seed_scores else 0.0,
         },
         "notes": [
             "Exploratory internal sanity check only; not a final strength benchmark claim.",
