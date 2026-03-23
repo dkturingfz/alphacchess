@@ -25,3 +25,23 @@ python scripts/build_test_positions_from_games.py \
   - `endgame`: ply 81+
   - `near_terminal`: terminal positions or legal-move count <= 4
 - Keep generated corpora and logs under ignored local-output directories (`artifacts/`, `data/generated/`, `logs/`, or `scratch/`).
+
+## Curate small tracked samples from local corpus
+
+```bash
+python scripts/curate_fen_samples.py   --input artifacts/local_pgns_full_YYYY-MM-DD/positions_raw.jsonl   --summary-output artifacts/local_pgns_full_YYYY-MM-DD/fen_curation_summary.json
+```
+
+This writes small tracked sample assets to:
+
+- `data/test_positions/samples/`
+- `data/benchmark_positions/samples/`
+
+while keeping the full corpus local-only under `artifacts/`.
+
+## Validate all tracked sample assets
+
+```bash
+python scripts/validate_fen_samples.py
+```
+
