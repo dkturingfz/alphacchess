@@ -67,7 +67,21 @@ To keep this file useful and not trivially repetitive, it intentionally includes
 
 It is **not** the final official benchmark suite.
 
-For a more statistically stable internal checkpoint sanity pass on this pool (no external engine runtime):
+## Frozen internal benchmark_start sanity protocol (exploratory)
+
+To prevent ad hoc protocol drift, reuse the following **fixed exploratory protocol** for internal checkpoint sanity comparisons on this pool (no external engine runtime):
+
+- `start_fens_file`: `data/benchmark_positions/samples/benchmark_start_fens_sample.txt`
+- `max-start-positions`: `8`
+- `games-per-start`: `4`
+- `max-moves`: `60`
+- `seeds`: `17,29,41,53`
+
+This totals **128 games** per checkpoint pair (`8 * 4 * 4`) and is intended to be:
+- more stable than smoke settings
+- still practical for repeated internal reruns
+
+Command template:
 
 ```bash
 python scripts/run_benchmark_start_sanity.py \
@@ -75,10 +89,35 @@ python scripts/run_benchmark_start_sanity.py \
   --baseline <baseline_checkpoint.json> \
   --max-start-positions 8 \
   --games-per-start 4 \
+  --max-moves 60 \
   --seeds 17,29,41,53
 ```
 
-This script is exploratory sanity evidence only and must **not** be treated as a final benchmark-strength claim.
+Do not change these protocol parameters between routine reruns unless there is a strong, explicitly documented reason.
+
+This script is exploratory internal sanity evidence only and must **not** be treated as a final benchmark-strength claim.
+
+### Example fixed-protocol application (2026-03-23, local-only)
+
+Chosen pair:
+- candidate: `iter_002`
+- baseline: `iter_000`
+
+Why this pair:
+- recent checkpoint-vs-previous evidence in a local pure-RL rerun was directional (`iter_001 > iter_000`, `iter_002 > iter_001`), so `iter_002 vs iter_000` is more informative than near-parity adjacent pairs.
+
+Local-only output path used in this run:
+- `artifacts/local_benchmark_start_protocol_freeze_2026-03-23/benchmark_start_sanity/iter002_vs_iter000_fixed_protocol.json`
+
+Observed fixed-protocol result:
+- per-seed candidate scores: `0.65625, 0.53125, 0.5625, 0.640625`
+- aggregate candidate score: `0.59765625` over `128 / 128` expected games
+- seed-score stddev: `0.052262...`
+
+Interpretation:
+- exploratory only
+- modestly directional in favor of candidate
+- suitable as a reusable internal sanity comparator protocol
 
 ## Trustworthy Windows PowerShell rerun recipe (checkpoint source + sanity check)
 
