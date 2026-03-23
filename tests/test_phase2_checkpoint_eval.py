@@ -133,3 +133,88 @@ def test_benchmark_start_sanity_script_outputs_summary(tmp_path):
     disk = json.loads(out.read_text())
     assert disk["candidate_checkpoint"] == str(candidate)
     assert disk["baseline_checkpoint"] == str(baseline)
+
+
+def test_benchmark_start_sanity_script_handles_quoted_seeds_and_creates_output_dir(tmp_path):
+    baseline = tmp_path / "baseline.json"
+    candidate = tmp_path / "candidate.json"
+
+    b_model = PolicyValueNet.for_xiangqi_v1(seed=21)
+    c_model = PolicyValueNet.for_xiangqi_v1(seed=22)
+    metadata = {
+        "action_encoding_version": "v1_8100_from_to",
+        "observation_encoding_version": "v1_15planes",
+        "dataset_schema_version": "v1",
+        "rules_version": "v1_python_rules",
+        "checkpoint_schema_version": "phase1_checkpoint_v1",
+    }
+    b_model.save_checkpoint(baseline, metadata)
+    c_model.save_checkpoint(candidate, metadata)
+
+    nested_out = tmp_path / "nested" / "results" / "sanity.json"
+    fens_file = Path("data/benchmark_positions/samples/benchmark_start_fens_sample.txt")
+    proc = subprocess.run(
+        [
+            sys.executable,
+            "scripts/run_benchmark_start_sanity.py",
+            "--candidate",
+            str(candidate),
+            "--baseline",
+            str(baseline),
+            "--start-fens",
+            str(fens_file),
+            "--max-start-positions",
+            "2",
+            "--games-per-start",
+            "1",
+            "--max-moves",
+            "40",
+            "--seeds",
+            '"5,7"',
+            "--out",
+            str(nested_out),
+        ],
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+
+    payload = json.loads(proc.stdout)
+    assert payload["seeds"] == [5, 7]
+    assert nested_out.exists()
+
+
+def test_benchmark_start_sanity_script_missing_start_fens_has_clear_error(tmp_path):
+    baseline = tmp_path / "baseline.json"
+    candidate = tmp_path / "candidate.json"
+
+    b_model = PolicyValueNet.for_xiangqi_v1(seed=31)
+    c_model = PolicyValueNet.for_xiangqi_v1(seed=32)
+    metadata = {
+        "action_encoding_version": "v1_8100_from_to",
+        "observation_encoding_version": "v1_15planes",
+        "dataset_schema_version": "v1",
+        "rules_version": "v1_python_rules",
+        "checkpoint_schema_version": "phase1_checkpoint_v1",
+    }
+    b_model.save_checkpoint(baseline, metadata)
+    c_model.save_checkpoint(candidate, metadata)
+
+    missing_fens = tmp_path / "missing_start_fens.txt"
+    proc = subprocess.run(
+        [
+            sys.executable,
+            "scripts/run_benchmark_start_sanity.py",
+            "--candidate",
+            str(candidate),
+            "--baseline",
+            str(baseline),
+            "--start-fens",
+            str(missing_fens),
+        ],
+        check=False,
+        text=True,
+        capture_output=True,
+    )
+    assert proc.returncode == 2
+    assert f"--start-fens file does not exist: {missing_fens}" in proc.stderr

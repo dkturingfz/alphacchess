@@ -14,6 +14,24 @@ from alphacchess.phase1_eval import eval_metadata, evaluate_model_vs_model_on_st
 from alphacchess.phase1_model import PolicyValueNet
 
 
+def _strip_outer_quotes(raw: str) -> str:
+    value = raw.strip()
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
+        return value[1:-1].strip()
+    return value
+
+
+def _as_cli_path(raw: str) -> Path:
+    return Path(_strip_outer_quotes(raw)).expanduser()
+
+
+def _require_existing_file(path: Path, arg_name: str) -> None:
+    if not path.exists():
+        raise FileNotFoundError(f"{arg_name} file does not exist: {path}")
+    if not path.is_file():
+        raise FileNotFoundError(f"{arg_name} path is not a file: {path}")
+
+
 def _load_fens(path: Path, max_positions: int) -> list[str]:
     fens = [line.strip() for line in path.read_text().splitlines() if line.strip()]
     unique_fens: list[str] = []
@@ -31,7 +49,8 @@ def _load_fens(path: Path, max_positions: int) -> list[str]:
 
 
 def _parse_seeds(raw: str) -> list[int]:
-    seeds = [int(chunk.strip()) for chunk in raw.split(",") if chunk.strip()]
+    normalized = _strip_outer_quotes(raw)
+    seeds = [int(_strip_outer_quotes(chunk)) for chunk in normalized.split(",") if chunk.strip()]
     if not seeds:
         raise ValueError("--seeds must contain at least one integer")
     return seeds
@@ -53,12 +72,18 @@ def main() -> int:
     parser.add_argument("--out", default="")
     args = parser.parse_args()
 
-    start_fens_path = Path(args.start_fens)
+    start_fens_path = _as_cli_path(args.start_fens)
+    candidate_checkpoint = _as_cli_path(args.candidate)
+    baseline_checkpoint = _as_cli_path(args.baseline)
+    _require_existing_file(start_fens_path, "--start-fens")
+    _require_existing_file(candidate_checkpoint, "--candidate")
+    _require_existing_file(baseline_checkpoint, "--baseline")
+
     start_fens = _load_fens(start_fens_path, args.max_start_positions)
     seeds = _parse_seeds(args.seeds)
 
-    candidate_model, candidate_meta = PolicyValueNet.load_checkpoint(args.candidate)
-    baseline_model, baseline_meta = PolicyValueNet.load_checkpoint(args.baseline)
+    candidate_model, candidate_meta = PolicyValueNet.load_checkpoint(candidate_checkpoint)
+    baseline_model, baseline_meta = PolicyValueNet.load_checkpoint(baseline_checkpoint)
 
     per_seed = []
     for seed in seeds:
@@ -92,8 +117,8 @@ def main() -> int:
     payload = {
         "metadata": eval_metadata(),
         "evaluation_type": "benchmark_start_checkpoint_sanity_v1",
-        "candidate_checkpoint": args.candidate,
-        "baseline_checkpoint": args.baseline,
+        "candidate_checkpoint": str(candidate_checkpoint),
+        "baseline_checkpoint": str(baseline_checkpoint),
         "candidate_checkpoint_metadata": candidate_meta,
         "baseline_checkpoint_metadata": baseline_meta,
         "start_fens_file": str(start_fens_path),
@@ -120,10 +145,16 @@ def main() -> int:
     }
 
     if args.out:
-        Path(args.out).write_text(json.dumps(payload, indent=2))
+        out_path = _as_cli_path(args.out)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(json.dumps(payload, indent=2))
     print(json.dumps(payload, indent=2))
     return 0
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    try:
+        raise SystemExit(main())
+    except (FileNotFoundError, ValueError) as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        raise SystemExit(2)
