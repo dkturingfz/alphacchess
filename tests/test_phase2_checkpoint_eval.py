@@ -127,7 +127,10 @@ def test_benchmark_start_sanity_script_outputs_summary(tmp_path):
     payload = json.loads(proc.stdout)
     assert payload["evaluation_type"] == "benchmark_start_checkpoint_sanity_v1"
     assert payload["start_positions_used"] == 3
+    assert payload["games_per_seed_expected"] == 6
+    assert payload["total_games_expected"] == 6
     assert payload["aggregate"]["games"] == 6
+    assert payload["aggregate"]["games_expected"] == 6
     assert payload["aggregate"]["candidate_wins"] + payload["aggregate"]["baseline_wins"] + payload["aggregate"]["draws"] == 6
 
     disk = json.loads(out.read_text())

@@ -88,6 +88,7 @@ def main() -> int:
 
     start_fens = _load_fens(start_fens_path, args.max_start_positions)
     seeds = _parse_seeds(args.seeds)
+    games_per_seed_expected = len(start_fens) * args.games_per_start
 
     candidate_model, candidate_meta = PolicyValueNet.load_checkpoint(candidate_checkpoint)
     baseline_model, baseline_meta = PolicyValueNet.load_checkpoint(baseline_checkpoint)
@@ -131,11 +132,14 @@ def main() -> int:
         "start_fens_file": str(start_fens_path),
         "start_positions_used": len(start_fens),
         "games_per_start": args.games_per_start,
+        "games_per_seed_expected": games_per_seed_expected,
+        "total_games_expected": games_per_seed_expected * len(seeds),
         "max_moves": args.max_moves,
         "seeds": seeds,
         "per_seed": per_seed,
         "aggregate": {
             "games": total_games,
+            "games_expected": games_per_seed_expected * len(seeds),
             "candidate_wins": total_candidate_wins,
             "baseline_wins": total_baseline_wins,
             "draws": total_draws,
