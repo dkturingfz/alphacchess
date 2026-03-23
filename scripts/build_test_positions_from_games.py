@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import glob
 import json
 import re
 import sys
@@ -15,7 +16,13 @@ sys.path.insert(0, str(ROOT))
 from alphacchess.notation import iccs_to_action
 from alphacchess.xiangqi_game import INITIAL_FEN, XiangqiState
 
-ICCS_MOVE_RE = re.compile(r"\b([a-i][0-9][a-i][0-9])\b", flags=re.IGNORECASE)
+# Supported ICCS movetext token shapes:
+# - compact:    h2e2
+# - hyphenated: h2-e2 (optional surrounding spaces around "-")
+ICCS_MOVE_RE = re.compile(
+    r"\b([a-i][0-9])(?:\s*-\s*([a-i][0-9])|([a-i][0-9]))\b",
+    flags=re.IGNORECASE,
+)
 FEN_TAG_RE = re.compile(r"\[FEN\s+\"([^\"]+)\"\]", flags=re.IGNORECASE)
 
 
@@ -26,6 +33,14 @@ class ConversionStats:
     games_converted: int = 0
     positions_emitted: int = 0
     parse_errors: int = 0
+
+
+def _extract_iccs_moves(line: str) -> list[str]:
+    moves: list[str] = []
+    for src, dst_hyphen, dst_compact in ICCS_MOVE_RE.findall(line):
+        dst = dst_hyphen or dst_compact
+        moves.append(f"{src}{dst}".lower())
+    return moves
 
 
 def _extract_games(lines: list[str]) -> Iterable[tuple[str, list[str]]]:
@@ -63,8 +78,7 @@ def _extract_games(lines: list[str]) -> Iterable[tuple[str, list[str]]]:
                 yield game
             continue
 
-        for move in ICCS_MOVE_RE.findall(line):
-            current_moves.append(move.lower())
+        current_moves.extend(_extract_iccs_moves(line))
 
     game = flush()
     if game:
@@ -73,15 +87,27 @@ def _extract_games(lines: list[str]) -> Iterable[tuple[str, list[str]]]:
 
 def _iter_input_files(inputs: list[str], recursive: bool) -> list[Path]:
     files: list[Path] = []
+    seen: set[Path] = set()
     for value in inputs:
-        path = Path(value)
-        if any(ch in value for ch in "*?[]"):
-            files.extend(sorted(Path().glob(value)))
+        path = Path(value).expanduser()
+        path_str = str(path)
+        if glob.has_magic(path_str):
+            matches = sorted(Path(p) for p in glob.glob(path_str, recursive=recursive))
+            candidates = [p for p in matches if p.is_file()]
         elif path.is_dir():
             pattern = "**/*" if recursive else "*"
-            files.extend(sorted(p for p in path.glob(pattern) if p.is_file()))
+            candidates = sorted(p for p in path.glob(pattern) if p.is_file())
         elif path.exists():
-            files.append(path)
+            candidates = [path]
+        else:
+            candidates = []
+
+        for candidate in candidates:
+            resolved = candidate.resolve()
+            if resolved in seen:
+                continue
+            seen.add(resolved)
+            files.append(candidate)
     return files
 
 
