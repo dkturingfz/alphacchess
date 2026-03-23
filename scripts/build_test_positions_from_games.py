@@ -6,6 +6,7 @@ import glob
 import json
 import re
 import sys
+from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
@@ -33,6 +34,18 @@ class ConversionStats:
     games_converted: int = 0
     positions_emitted: int = 0
     parse_errors: int = 0
+
+
+def _categorize_position(*, ply: int, legal_count: int, is_terminal: bool) -> str:
+    if ply == 0:
+        return "benchmark_start"
+    if is_terminal or legal_count <= 4:
+        return "near_terminal"
+    if ply <= 20:
+        return "opening"
+    if ply <= 80:
+        return "middlegame"
+    return "endgame"
 
 
 def _extract_iccs_moves(line: str) -> list[str]:
@@ -116,14 +129,16 @@ def _emit_positions(
     moves_iccs: list[str],
     emit_start_position: bool,
     sample_every_n_plies: int,
-) -> list[str]:
-    positions: list[str] = []
+) -> list[tuple[int, str, int, bool]]:
+    positions: list[tuple[int, str, int, bool]] = []
     if emit_start_position:
-        positions.append(state.to_fen())
+        legal = len(state.legal_actions())
+        positions.append((0, state.to_fen(), legal, state.is_terminal()))
     for ply, move in enumerate(moves_iccs, start=1):
         state.apply_action(iccs_to_action(move))
         if sample_every_n_plies <= 1 or ply % sample_every_n_plies == 0:
-            positions.append(state.to_fen())
+            legal = len(state.legal_actions())
+            positions.append((ply, state.to_fen(), legal, state.is_terminal()))
     return positions
 
 
@@ -137,6 +152,12 @@ def main() -> int:
     parser.add_argument("--sample-every-n-plies", type=int, default=1, help="Emit every N plies (default: 1)")
     parser.add_argument("--max-games", type=int, default=0, help="Optional conversion cap for smoke runs")
     parser.add_argument("--emit-start-position", action="store_true", help="Also emit each game's start FEN")
+    parser.add_argument(
+        "--category-output-dir",
+        default="",
+        help="Optional directory for category-split JSONL outputs",
+    )
+    parser.add_argument("--summary-output", default="", help="Optional summary JSON output path")
     args = parser.parse_args()
 
     if args.sample_every_n_plies < 1:
@@ -147,46 +168,76 @@ def main() -> int:
     out_path.parent.mkdir(parents=True, exist_ok=True)
 
     stats = ConversionStats(files_seen=len(files))
+    failure_reasons: Counter[str] = Counter()
+    category_counts: Counter[str] = Counter()
+
+    category_fps: dict[str, object] = {}
+    if args.category_output_dir:
+        category_dir = Path(args.category_output_dir)
+        category_dir.mkdir(parents=True, exist_ok=True)
+        for name in ["opening", "middlegame", "endgame", "near_terminal", "benchmark_start"]:
+            category_fps[name] = (category_dir / f"{name}.jsonl").open("w", encoding="utf-8")
+
     with out_path.open("w", encoding="utf-8") as out_fp:
-        for path in files:
-            lines = path.read_text(encoding="utf-8", errors="ignore").splitlines()
-            for game_idx, (start_fen, moves_iccs) in enumerate(_extract_games(lines), start=1):
-                stats.games_seen += 1
+        try:
+            for path in files:
+                lines = path.read_text(encoding="utf-8", errors="ignore").splitlines()
+                for game_idx, (start_fen, moves_iccs) in enumerate(_extract_games(lines), start=1):
+                    stats.games_seen += 1
+                    if args.max_games and stats.games_converted >= args.max_games:
+                        break
+
+                    try:
+                        state = XiangqiState.from_fen(start_fen)
+                        positions = _emit_positions(
+                            state=state,
+                            moves_iccs=moves_iccs,
+                            emit_start_position=args.emit_start_position,
+                            sample_every_n_plies=args.sample_every_n_plies,
+                        )
+                    except Exception as exc:
+                        stats.parse_errors += 1
+                        failure_reasons[f"{type(exc).__name__}: {exc}"] += 1
+                        continue
+
+                    for source_ply, fen, legal_count, is_terminal in positions:
+                        category = _categorize_position(
+                            ply=source_ply,
+                            legal_count=legal_count,
+                            is_terminal=is_terminal,
+                        )
+                        rec = {
+                            "source_file": str(path),
+                            "source_game_index": game_idx,
+                            "source_ply": source_ply,
+                            "fen": fen,
+                            "category": category,
+                        }
+                        line = json.dumps(rec, ensure_ascii=False) + "\n"
+                        out_fp.write(line)
+                        if category in category_fps:
+                            category_fps[category].write(line)
+                        category_counts[category] += 1
+                        stats.positions_emitted += 1
+                    stats.games_converted += 1
+
                 if args.max_games and stats.games_converted >= args.max_games:
                     break
+        finally:
+            for fp in category_fps.values():
+                fp.close()
 
-                try:
-                    state = XiangqiState.from_fen(start_fen)
-                    positions = _emit_positions(
-                        state=state,
-                        moves_iccs=moves_iccs,
-                        emit_start_position=args.emit_start_position,
-                        sample_every_n_plies=args.sample_every_n_plies,
-                    )
-                except Exception:
-                    stats.parse_errors += 1
-                    continue
+    payload = {
+        **stats.__dict__,
+        "failure_reasons": dict(sorted(failure_reasons.items(), key=lambda kv: kv[1], reverse=True)),
+        "category_counts": dict(sorted(category_counts.items())),
+    }
+    if args.summary_output:
+        summary_path = Path(args.summary_output)
+        summary_path.parent.mkdir(parents=True, exist_ok=True)
+        summary_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
-                for ply, fen in enumerate(positions):
-                    out_fp.write(
-                        json.dumps(
-                            {
-                                "source_file": str(path),
-                                "source_game_index": game_idx,
-                                "ply_index": ply,
-                                "fen": fen,
-                            },
-                            ensure_ascii=False,
-                        )
-                        + "\n"
-                    )
-                    stats.positions_emitted += 1
-                stats.games_converted += 1
-
-            if args.max_games and stats.games_converted >= args.max_games:
-                break
-
-    print(json.dumps(stats.__dict__, indent=2))
+    print(json.dumps(payload, indent=2, ensure_ascii=False))
     return 0
 
 
