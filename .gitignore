@@ -1,1 +1,22 @@
 __pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Local-only raw imports (PGN/PGNS and similar)
+data/import_raw/**
+!data/import_raw/.gitkeep
+
+# Local/generated corpora and conversion outputs
+data/generated/**
+!data/generated/.gitkeep
+artifacts/**
+!artifacts/.gitkeep
+
+# Conversion and validation logs/summaries
+logs/**
+*.log
+*_summary.json
+*_summary.jsonl
+
+# Local scratch outputs for scripts
+scratch/**
