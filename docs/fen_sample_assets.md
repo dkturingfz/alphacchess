@@ -67,18 +67,40 @@ To keep this file useful and not trivially repetitive, it intentionally includes
 
 It is **not** the final official benchmark suite.
 
-For a small internal checkpoint sanity pass on this pool (no external engine runtime):
+For a more statistically stable internal checkpoint sanity pass on this pool (no external engine runtime):
 
 ```bash
 python scripts/run_benchmark_start_sanity.py \
   --candidate <candidate_checkpoint.json> \
   --baseline <baseline_checkpoint.json> \
-  --max-start-positions 5 \
-  --games-per-start 2 \
-  --seeds 17,29
+  --max-start-positions 8 \
+  --games-per-start 4 \
+  --seeds 17,29,41,53
 ```
 
 This script is exploratory sanity evidence only and must **not** be treated as a final benchmark-strength claim.
+
+## Reproducible benchmark_start refresh (local converted corpus -> tracked sample)
+
+Use the local converted corpus JSONL as deterministic input and keep large candidate pools local-only:
+
+```bash
+python scripts/refresh_benchmark_start_samples.py \
+  --input artifacts/<run>/positions_raw.jsonl \
+  --selected-count 12 \
+  --max-source-ply 20 \
+  --manifest-output artifacts/<run>/benchmark_start_refresh/manifest.json \
+  --summary-output artifacts/<run>/benchmark_start_refresh/summary.json \
+  --candidate-dump-output artifacts/<run>/benchmark_start_refresh/candidate_pool.jsonl
+```
+
+Refresh script outputs include:
+- source corpus path
+- total candidate count
+- deduplicated candidate count
+- selected sample count
+- diversity stats (piece-count and source-ply spread)
+- deterministic selection strategy text
 
 ## Git vs local-only boundary
 
