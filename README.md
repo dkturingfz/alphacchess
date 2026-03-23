@@ -64,3 +64,11 @@ python scripts/evaluate_vs_pikafish.py \
   --dry-run
 ```
 
+
+
+## 本地数据转换（仓库安全）
+
+- PGNS/PGN-like -> FEN 位置抽取脚本：`scripts/build_test_positions_from_games.py`
+- FEN 位置校验脚本：`scripts/validate_test_positions.py`
+
+这两个脚本用于**本地**数据准备与检查。完整大规模转换应输出到本地/制品目录（artifact-only），不应将大体量生成数据提交到 git。
