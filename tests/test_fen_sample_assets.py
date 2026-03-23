@@ -50,3 +50,19 @@ def test_validate_fen_samples_cli_smoke():
         text=True,
     )
     assert '"status": "ok"' in proc.stdout
+
+
+def test_benchmark_start_sample_has_diversity_floor():
+    benchmark_start = ROOT / "data/benchmark_positions/samples/benchmark_start_fens_sample.txt"
+    fens = _read_fens(benchmark_start)
+    assert len(set(fens)) >= 4
+
+
+def test_check_fen_assets_cli_smoke():
+    proc = subprocess.run(
+        [sys.executable, "scripts/check_fen_assets.py", "--skip-pytest"],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    assert '"status": "ok"' in proc.stdout

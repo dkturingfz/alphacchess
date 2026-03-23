@@ -39,12 +39,23 @@ This performs:
 - FEN parse/readability checks
 - legal move generation sanity checks
 - near-terminal rule checks (near-terminal samples must be terminal or have <= 4 legal moves)
+- benchmark-start diversity floor checks (at least 4 unique benchmark-start FENs by default)
+
+For a one-command workflow check (validator + pytest module):
+
+```bash
+python scripts/check_fen_assets.py
+```
 
 ## Benchmark-start sample purpose
 
 `data/benchmark_positions/samples/benchmark_start_fens_sample.txt` is a **small exploratory pool** for:
 - controlled comparison starts
 - smoke-level benchmark wiring checks
+
+To keep this file useful and not trivially repetitive, it intentionally includes:
+- the standard initial Xiangqi position
+- a few curated early-game starts from the tracked opening sample assets
 
 It is **not** the final official benchmark suite.
 
@@ -61,5 +72,4 @@ Local-only (ignored):
 
 ## Current limitations
 
-- Current 300-game run yields only one unique `benchmark_start` FEN (all games start from the standard initial position), so the tracked benchmark-start sample pool currently contains one line.
 - These assets are for regression and benchmark preparation; not for final strength claims.

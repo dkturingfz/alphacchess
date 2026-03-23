@@ -29,7 +29,9 @@ python scripts/build_test_positions_from_games.py \
 ## Curate small tracked samples from local corpus
 
 ```bash
-python scripts/curate_fen_samples.py   --input artifacts/local_pgns_full_YYYY-MM-DD/positions_raw.jsonl   --summary-output artifacts/local_pgns_full_YYYY-MM-DD/fen_curation_summary.json
+python scripts/curate_fen_samples.py \
+  --input artifacts/local_pgns_full_YYYY-MM-DD/positions_raw.jsonl \
+  --summary-output artifacts/local_pgns_full_YYYY-MM-DD/fen_curation_summary.json
 ```
 
 This writes small tracked sample assets to:
@@ -45,3 +47,8 @@ while keeping the full corpus local-only under `artifacts/`.
 python scripts/validate_fen_samples.py
 ```
 
+Or run the validator plus FEN-asset pytest module in one command:
+
+```bash
+python scripts/check_fen_assets.py
+```

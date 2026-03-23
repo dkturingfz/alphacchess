@@ -2,7 +2,7 @@
 
 基于 OpenSpiel-compatible Game/State 接口的中国象棋强化学习项目。
 
-## 当前状态（2026-03-22）
+## 当前状态（2026-03-23）
 
 当前仓库状态与优先级：
 
@@ -73,5 +73,6 @@ python scripts/evaluate_vs_pikafish.py \
 - FEN 位置校验脚本：`scripts/validate_test_positions.py`
 - FEN 样本集策展脚本：`scripts/curate_fen_samples.py`
 - 一键校验所有跟踪样本：`scripts/validate_fen_samples.py`
+- FEN 样本工作流一键检查（校验 + pytest）：`scripts/check_fen_assets.py`
 
 这两个脚本用于**本地**数据准备与检查。完整大规模转换应输出到本地/制品目录（artifact-only），不应将大体量生成数据提交到 git。
