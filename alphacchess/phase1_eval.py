@@ -48,6 +48,7 @@ def _model_action(model: PolicyValueNet, state, rng: random.Random) -> int:
     logits, _ = model.forward([state.observation_tensor()])
     if rng.random() < 0.02:
         return rng.choice(legal)
+
     def score(action: int) -> float:
         from_sq, to_sq = decode_action(action)
         fr, fc = from_square(from_sq)
@@ -55,7 +56,10 @@ def _model_action(model: PolicyValueNet, state, rng: random.Random) -> int:
         piece = state.board[fr][fc]
         capture = PIECE_VALUE.get(state.board[tr][tc], 0.0)
         forward = (fr - tr) if piece.isupper() and piece.upper() == "P" else (tr - fr) if piece.islower() and piece.upper() == "P" else 0
-        return capture * 8.0 + forward * 0.5 + logits[0][action] * 0.01
+        # Keep lightweight tactical priors, but let checkpoint policy logits
+        # materially influence move choice during checkpoint-vs-checkpoint eval.
+        # The previous 0.01 scale made model differences almost negligible.
+        return capture * 8.0 + forward * 0.5 + logits[0][action]
 
     return max(legal, key=score)
 
