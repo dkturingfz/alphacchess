@@ -284,16 +284,18 @@ def _train_round(run_dir: Path, cfg: dict, seed: int) -> dict:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Unattended pure-RL closed-loop experiment with frozen key-pair checks")
-    parser.add_argument("--min-runs", type=int, default=3)
-    parser.add_argument("--max-runs", type=int, default=6)
+    parser.add_argument("--min-runs", type=int, default=6)
+    parser.add_argument("--max-runs", type=int, default=8)
     parser.add_argument("--seed", type=int, default=20260324)
     parser.add_argument("--out-root", default="")
     args = parser.parse_args()
 
-    if args.min_runs < 3:
-        raise ValueError("--min-runs must be >= 3")
-    if args.max_runs > 6:
-        raise ValueError("--max-runs must be <= 6")
+    if args.min_runs < 6:
+        raise ValueError("--min-runs must be >= 6")
+    if args.max_runs > 8:
+        raise ValueError("--max-runs must be <= 8")
+    if args.min_runs > args.max_runs:
+        raise ValueError("--min-runs must be <= --max-runs")
 
     if args.out_root:
         root = Path(args.out_root)
@@ -318,7 +320,9 @@ def main() -> int:
     rounds: list[RoundResult] = []
     no_true_improve_streak = 0
     fake_improve_streak = 0
+    true_improve_streak = 0
     stop_reason = "max_runs_reached"
+    fixed_panel: list[tuple[int, int]] | None = None
 
     for run_id in range(args.max_runs):
         run_name = "baseline" if run_id == 0 else f"adjust_round_{run_id}"
@@ -326,7 +330,9 @@ def main() -> int:
         summary = _train_round(run_dir, config, args.seed + run_id * 100)
         quality = _quality_from_summary(summary)
         iterations = [item["iteration"] for item in quality["per_iteration"]]
-        panel = _build_panel_for_run(iterations)
+        if fixed_panel is None:
+            fixed_panel = _build_panel_for_run(iterations)
+        panel = fixed_panel
         pair_results = [_eval_pair(run_dir, run_dir / "train" / "checkpoints", cand, base) for cand, base in panel]
         diagnosis = _diagnose(quality, pair_results)
 
@@ -336,12 +342,15 @@ def main() -> int:
         if classification == "true_improvement":
             no_true_improve_streak = 0
             fake_improve_streak = 0
+            true_improve_streak += 1
         elif classification == "fake_improvement":
             no_true_improve_streak += 1
             fake_improve_streak += 1
+            true_improve_streak = 0
         else:
             no_true_improve_streak += 1
             fake_improve_streak = 0
+            true_improve_streak = 0
 
         next_cfg, adj_reason = _next_config(config, diagnosis)
         rounds.append(
@@ -358,19 +367,22 @@ def main() -> int:
             )
         )
 
-        # Early stop checks, only after minimum runs.
+        # Stop checks aligned to the mandatory multi-round task contract.
         if len(rounds) >= args.min_runs:
-            if no_true_improve_streak >= 2:
-                stop_reason = "two_consecutive_runs_without_true_improvement"
+            if true_improve_streak >= 2:
+                stop_reason = "stop_condition_1_two_recent_true_improvements_after_min_runs"
+                break
+            if no_true_improve_streak >= 3:
+                stop_reason = "stop_condition_2_three_consecutive_runs_without_true_improvement_after_min_runs"
                 break
             if fake_improve_streak >= 2:
-                stop_reason = "two_consecutive_fake_improvements"
-                break
-            if len(rounds) >= 4 and rounds[-1].classification == "true_improvement" and rounds[-2].classification == "true_improvement":
-                stop_reason = "stable_better_config_confirmed"
+                stop_reason = "stop_condition_3_two_consecutive_fake_improvements"
                 break
 
         config = next_cfg
+
+    if stop_reason == "max_runs_reached" and len(rounds) >= args.max_runs:
+        stop_reason = "stop_condition_4_reached_max_runs"
 
     report = {
         "experiment_schema_version": "pure_rl_closed_loop_v1",
@@ -380,6 +392,7 @@ def main() -> int:
             "external_engine_disabled": True,
             "training_keys_adjustable_only": sorted(ALLOWED_TRAIN_KEYS),
             "key_pair_panel_template": [list(p) for p in PANEL_TEMPLATE],
+            "fixed_panel_used_for_all_rounds": [list(p) for p in (fixed_panel or [])],
         },
         "stop_reason": stop_reason,
         "runs": [
