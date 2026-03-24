@@ -47,6 +47,18 @@ Phase 2.1 helper that reads `train_summary.json` from a multi-iteration run and 
 - stricter readiness checks and graded decision flags (`pass` / `caution` / `fail`)
 - conservative handoff gate (`ready_for_next_stage`) for Phase 3 prep decisions
 
+### `scripts/build_systematic_benchmark_pairs.py`
+
+Deterministically builds a checkpoint-pair evaluation plan from `train_summary.json` to avoid ad hoc pair guessing.
+
+Coverage goals in the generated plan:
+- all adjacent pairs
+- all `iter_k vs iter_000` pairs
+- larger span pairs (`k vs k-2`, `k vs k-3`, and latest-vs-mid anchor)
+- anomaly probes when an iteration shows high truncation or very low non-zero value fraction
+
+The script also pins the frozen benchmark_start sanity protocol parameters in the output plan metadata.
+
 ### `scripts/evaluate_vs_random.py`
 
 Quick baseline check of one checkpoint against random play.
