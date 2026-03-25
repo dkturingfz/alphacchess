@@ -186,24 +186,37 @@ def _signal_improvement(prev: RoundResult, curr_quality: dict, curr_pairs: list[
 
 def _direction_guardrail(prev: RoundResult, curr_pairs: list[dict]) -> tuple[bool, list[str]]:
     reasons = []
-    degraded = False
+    triggered = False
+
+    curr_10 = _find_pair(curr_pairs, 1, 0)
+    curr_30 = _find_pair(curr_pairs, 3, 0)
+    if curr_10 and curr_10["candidate_score"] < 0.40:
+        triggered = True
+        reasons.append("guardrail_redline: iter_001_vs_iter_000 < 0.40")
+    if curr_30 and curr_30["candidate_score"] < 0.40:
+        triggered = True
+        reasons.append("guardrail_redline: iter_003_vs_iter_000 < 0.40")
+    if (
+        curr_10
+        and curr_30
+        and curr_10["candidate_score"] < 0.50
+        and curr_30["candidate_score"] < 0.50
+    ):
+        triggered = True
+        reasons.append("guardrail_redline: both iter_001/iter_003 vs iter_000 < 0.50")
 
     prev_10 = _find_pair(prev.pair_results, 1, 0)
-    curr_10 = _find_pair(curr_pairs, 1, 0)
-    if prev_10 and curr_10 and prev_10["candidate_score"] >= 0.55 and curr_10["candidate_score"] <= 0.45:
-        degraded = True
-        reasons.append("iter_001 vs iter_000 flipped from clear positive to clear negative")
+    prev_30 = _find_pair(prev.pair_results, 3, 0)
+    if prev_10 and prev_30 and curr_10 and curr_30:
+        no_lift = (
+            curr_10["candidate_score"] <= prev_10["candidate_score"]
+            and curr_30["candidate_score"] <= prev_30["candidate_score"]
+        )
+        if no_lift:
+            triggered = True
+            reasons.append("guardrail_redline: key pairs did not lift vs previous run")
 
-    curr_later = _find_pair(curr_pairs, 3, 0)
-    if curr_later and curr_later["candidate_score"] < 0.47:
-        degraded = True
-        reasons.append("later vs iter_000 significantly below 0.5")
-
-    if all(item["abs_score_minus_0_5"] <= 0.03 for item in curr_pairs):
-        degraded = True
-        reasons.append("key-pair directionality collapsed near 0.5")
-
-    return degraded, reasons
+    return triggered, reasons
 
 
 def _classify(prev: RoundResult | None, curr_quality: dict, curr_pairs: list[dict]) -> tuple[str, list[str]]:
@@ -211,37 +224,50 @@ def _classify(prev: RoundResult | None, curr_quality: dict, curr_pairs: list[dic
         return "baseline", ["baseline round"]
 
     signal_better, signal_reasons = _signal_improvement(prev, curr_quality, curr_pairs)
-    degraded, guardrail_reasons = _direction_guardrail(prev, curr_pairs)
+    guardrail_triggered, guardrail_reasons = _direction_guardrail(prev, curr_pairs)
+    curr_10 = _find_pair(curr_pairs, 1, 0)
+    curr_30 = _find_pair(curr_pairs, 3, 0)
 
-    if signal_better and degraded:
+    if signal_better:
+        if curr_10 and curr_30 and curr_10["candidate_score"] >= 0.50 and curr_30["candidate_score"] >= 0.50 and not guardrail_triggered:
+            return "true_improvement", signal_reasons
         return "fake_improvement", signal_reasons + guardrail_reasons
-    if signal_better and not degraded:
-        return "true_improvement", signal_reasons
-    if degraded:
+
+    if guardrail_triggered:
         return "no_improvement", guardrail_reasons
-    return "no_improvement", ["no signal-level threshold met"]
+    return "no_improvement", ["no meaningful signal or directional improvement"]
 
 
-def _next_config(prev_cfg: dict, diagnosis: dict) -> tuple[dict, list[str]]:
+def _next_config(prev_cfg: dict, diagnosis: dict, prev: RoundResult | None) -> tuple[dict, list[str]]:
     cfg = deepcopy(prev_cfg)
     reasons = []
+    if prev:
+        p10 = _find_pair(prev.pair_results, 1, 0)
+        p30 = _find_pair(prev.pair_results, 3, 0)
+        if p10 and p30 and p10["candidate_score"] < 0.50 and p30["candidate_score"] < 0.50:
+            cfg["max_moves"] = min(160, int(cfg["max_moves"]) + 20)
+            cfg["terminal_enrichment_games"] = min(16, int(cfg["terminal_enrichment_games"]) + 2)
+            cfg["terminal_enrichment_max_moves"] = min(20, int(cfg["terminal_enrichment_max_moves"]) + 2)
+            cfg["games_per_iter"] = min(24, int(cfg["games_per_iter"]) + 2)
+            reasons.append("directional repair priority: increase terminal signal density and horizon")
+            return {k: v for k, v in cfg.items() if k in ALLOWED_TRAIN_KEYS}, reasons
 
     issue = diagnosis["main_issue"]
     if issue == "truncation too high":
-        cfg["max_moves"] = min(140, int(cfg["max_moves"]) + 20)
-        cfg["terminal_enrichment_games"] = int(cfg["terminal_enrichment_games"]) + 2
+        cfg["max_moves"] = min(160, int(cfg["max_moves"]) + 20)
+        cfg["terminal_enrichment_games"] = min(16, int(cfg["terminal_enrichment_games"]) + 2)
         cfg["terminal_enrichment_max_moves"] = min(18, int(cfg["terminal_enrichment_max_moves"]) + 2)
         reasons.append("raise move horizon + terminal enrichment to reduce truncations")
     elif issue == "value supervision too weak":
-        cfg["games_per_iter"] = int(cfg["games_per_iter"]) + 2
+        cfg["games_per_iter"] = min(24, int(cfg["games_per_iter"]) + 2)
         cfg["epochs"] = min(4, int(cfg["epochs"]) + 1)
         reasons.append("increase training signal density for non-zero values")
     elif issue == "evaluation noise high":
-        cfg["quick_eval_games"] = int(cfg["quick_eval_games"]) + 2
-        cfg["checkpoint_eval_games"] = int(cfg["checkpoint_eval_games"]) + 2
+        cfg["quick_eval_games"] = min(20, int(cfg["quick_eval_games"]) + 2)
+        cfg["checkpoint_eval_games"] = min(20, int(cfg["checkpoint_eval_games"]) + 2)
         reasons.append("increase eval games to reduce variance")
     else:
-        cfg["checkpoint_eval_games"] = int(cfg["checkpoint_eval_games"]) + 2
+        cfg["checkpoint_eval_games"] = min(20, int(cfg["checkpoint_eval_games"]) + 2)
         cfg["checkpoint_eval_max_moves"] = min(120, int(cfg["checkpoint_eval_max_moves"]) + 10)
         reasons.append("increase checkpoint eval sensitivity for small updates")
 
@@ -352,7 +378,7 @@ def main() -> int:
             fake_improve_streak = 0
             true_improve_streak = 0
 
-        next_cfg, adj_reason = _next_config(config, diagnosis)
+        next_cfg, adj_reason = _next_config(config, diagnosis, prev)
         rounds.append(
             RoundResult(
                 run_id=run_id,
@@ -376,8 +402,19 @@ def main() -> int:
                 stop_reason = "stop_condition_2_three_consecutive_runs_without_true_improvement_after_min_runs"
                 break
             if fake_improve_streak >= 2:
-                stop_reason = "stop_condition_3_two_consecutive_fake_improvements"
-                break
+                recent = rounds[-1:]
+                prev_run = recent[0] if recent else None
+                no_trend = False
+                if prev_run:
+                    prev10 = _find_pair(prev_run.pair_results, 1, 0)
+                    prev30 = _find_pair(prev_run.pair_results, 3, 0)
+                    curr10 = _find_pair(pair_results, 1, 0)
+                    curr30 = _find_pair(pair_results, 3, 0)
+                    if prev10 and prev30 and curr10 and curr30:
+                        no_trend = curr10["candidate_score"] <= prev10["candidate_score"] and curr30["candidate_score"] <= prev30["candidate_score"]
+                if no_trend:
+                    stop_reason = "stop_condition_3_two_consecutive_fake_improvements_without_guardrail_repair_trend"
+                    break
 
         config = next_cfg
 
@@ -385,7 +422,7 @@ def main() -> int:
         stop_reason = "stop_condition_4_reached_max_runs"
 
     report = {
-        "experiment_schema_version": "pure_rl_closed_loop_v1",
+        "experiment_schema_version": "pure_rl_closed_loop_v2_directional_repair",
         "frozen_protocol": deepcopy(FROZEN_PROTOCOL),
         "constraints": {
             "style_disabled": True,
