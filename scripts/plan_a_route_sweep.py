@@ -223,8 +223,11 @@ def _route_status(classification: str, anchors: list[dict[str, Any]], no_gain_st
     return "暂时保留"
 
 
-def _success_condition(records: list[RunRecord]) -> tuple[bool, str]:
-    if len(records) < 2:
+def _success_condition(records: list[RunRecord], min_runs_before_success: int, min_families_before_success: int) -> tuple[bool, str]:
+    if len(records) < max(2, min_runs_before_success):
+        return False, ""
+    families = {r.route_family for r in records}
+    if len(families) < min_families_before_success:
         return False, ""
     latest = records[-1]
     anchors = latest.anchor_curve_vs_iter000
@@ -294,6 +297,8 @@ def main() -> int:
     parser.add_argument("--min-runs", type=int, default=5)
     parser.add_argument("--max-runs", type=int, default=6)
     parser.add_argument("--out-root", default="")
+    parser.add_argument("--min-runs-before-success", type=int, default=8)
+    parser.add_argument("--min-families-before-success", type=int, default=5)
     args = parser.parse_args()
 
     ts = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
@@ -480,7 +485,11 @@ def main() -> int:
             )
         )
 
-        success, success_reason = _success_condition(records)
+        success, success_reason = _success_condition(
+            records,
+            min_runs_before_success=args.min_runs_before_success,
+            min_families_before_success=args.min_families_before_success,
+        )
         if success and len(records) >= 2:
             break
 
@@ -490,7 +499,11 @@ def main() -> int:
 
         run_index += 1
 
-    final_success, success_reason = _success_condition(records)
+    final_success, success_reason = _success_condition(
+        records,
+        min_runs_before_success=args.min_runs_before_success,
+        min_families_before_success=args.min_families_before_success,
+    )
     final_fail, fail_reason = _failure_condition(records, min_runs=args.min_runs, min_families=5)
 
     report = {
