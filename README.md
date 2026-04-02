@@ -43,6 +43,7 @@
 - FEN 样本资产说明：`docs/fen_sample_assets.md`
 - style eval 协议：`docs/style_eval_protocol.md`
 - style 流水线导览（当前延后）：`docs/phase1b_file_guide.md`
+- 文本语料人工审核规范（Fish-LangCell）：`docs/text_corpus_review_guidelines.md`
 
 ## 常用脚本
 
